@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          category_type: string
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          item_count: string | null
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category_type?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          item_count?: string | null
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category_type?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          item_count?: string | null
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -121,6 +157,7 @@ export type Database = {
           is_active: boolean
           name: string
           price: number
+          section: string | null
           stock: number
           updated_at: string
           updated_by: string | null
@@ -135,6 +172,7 @@ export type Database = {
           is_active?: boolean
           name: string
           price?: number
+          section?: string | null
           stock?: number
           updated_at?: string
           updated_by?: string | null
@@ -149,6 +187,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           price?: number
+          section?: string | null
           stock?: number
           updated_at?: string
           updated_by?: string | null
@@ -258,6 +297,48 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price?: number
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []

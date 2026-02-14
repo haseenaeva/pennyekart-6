@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PlatformSelector from "@/components/PlatformSelector";
 import SearchBar from "@/components/SearchBar";
 import CategoryBar from "@/components/CategoryBar";
@@ -37,11 +38,20 @@ const lowBudget = [
 
 const Index = () => {
   const [platform, setPlatform] = useState("pennyekart");
+  const navigate = useNavigate();
+
+  const handlePlatformSelect = (id: string) => {
+    if (id === "pennyservices") {
+      navigate("/services");
+      return;
+    }
+    setPlatform(id);
+  };
 
   return (
     <div className="min-h-screen pb-16 md:pb-0">
       <header className="sticky top-0 z-40">
-        <PlatformSelector selected={platform} onSelect={setPlatform} />
+        <PlatformSelector selected={platform} onSelect={handlePlatformSelect} />
         <SearchBar />
       </header>
 

@@ -16,6 +16,9 @@ import RolesPage from "./pages/admin/RolesPage";
 import ProductsPage from "./pages/admin/ProductsPage";
 import OrdersPage from "./pages/admin/OrdersPage";
 import BannersPage from "./pages/admin/BannersPage";
+import CategoriesPage from "./pages/admin/CategoriesPage";
+import ServicesPage from "./pages/admin/ServicesPage";
+import PennyServices from "./pages/PennyServices";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +43,9 @@ const App = () => {
               <Route path="/admin/products" element={<ProtectedRoute requirePermission="read_products"><ProductsPage /></ProtectedRoute>} />
               <Route path="/admin/orders" element={<ProtectedRoute requirePermission="read_orders"><OrdersPage /></ProtectedRoute>} />
               <Route path="/admin/banners" element={<ProtectedRoute requirePermission="read_banners"><BannersPage /></ProtectedRoute>} />
+              <Route path="/admin/categories" element={<ProtectedRoute requirePermission="read_categories"><CategoriesPage /></ProtectedRoute>} />
+              <Route path="/admin/services" element={<ProtectedRoute requirePermission="read_services"><ServicesPage /></ProtectedRoute>} />
+              <Route path="/services" element={<PennyServices />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

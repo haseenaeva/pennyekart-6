@@ -15,9 +15,17 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 interface Product {
   id: string; name: string; description: string | null; price: number;
   category: string | null; stock: number; is_active: boolean; image_url: string | null;
+  section: string | null;
 }
 
-const emptyProduct = { name: "", description: "", price: 0, category: "", stock: 0, is_active: true, image_url: "" };
+const sectionOptions = [
+  { value: "", label: "None" },
+  { value: "most_ordered", label: "Most Ordered Items" },
+  { value: "new_arrivals", label: "New Arrivals" },
+  { value: "low_budget", label: "Low Budget Picks" },
+];
+
+const emptyProduct = { name: "", description: "", price: 0, category: "", stock: 0, is_active: true, image_url: "", section: "" };
 
 const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -52,7 +60,7 @@ const ProductsPage = () => {
   };
 
   const openEdit = (p: Product) => {
-    setForm({ name: p.name, description: p.description ?? "", price: p.price, category: p.category ?? "", stock: p.stock, is_active: p.is_active, image_url: p.image_url ?? "" });
+    setForm({ name: p.name, description: p.description ?? "", price: p.price, category: p.category ?? "", stock: p.stock, is_active: p.is_active, image_url: p.image_url ?? "", section: p.section ?? "" });
     setEditId(p.id); setOpen(true);
   };
 
@@ -75,6 +83,12 @@ const ProductsPage = () => {
                   <div><Label>Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: +e.target.value })} /></div>
                 </div>
                 <div><Label>Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+                <div>
+                  <Label>Section</Label>
+                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })}>
+                    {sectionOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
                 <div><Label>Image URL</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} /></div>
                 <div className="flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} /><Label>Active</Label></div>
                 <Button className="w-full" onClick={handleSave}>Save</Button>
@@ -90,6 +104,7 @@ const ProductsPage = () => {
               <TableHead>Name</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
+              <TableHead>Section</TableHead>
               <TableHead>Active</TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
@@ -100,6 +115,7 @@ const ProductsPage = () => {
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell>₹{p.price}</TableCell>
                 <TableCell>{p.stock}</TableCell>
+                <TableCell>{sectionOptions.find((o) => o.value === p.section)?.label || "—"}</TableCell>
                 <TableCell>{p.is_active ? "✓" : "✗"}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">

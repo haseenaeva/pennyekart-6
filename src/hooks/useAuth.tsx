@@ -10,6 +10,12 @@ interface Profile {
   avatar_url: string | null;
   role_id: string | null;
   is_super_admin: boolean;
+  is_approved: boolean;
+  mobile_number: string | null;
+  date_of_birth: string | null;
+  user_type: string;
+  local_body_id: string | null;
+  ward_number: number | null;
 }
 
 interface AuthContextType {

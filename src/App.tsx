@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import SplashScreen from "./components/SplashScreen";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
+import ProtectedPartnerRoute from "./components/ProtectedPartnerRoute";
 import Dashboard from "./pages/admin/Dashboard";
 import UsersPage from "./pages/admin/UsersPage";
 import RolesPage from "./pages/admin/RolesPage";
@@ -19,7 +20,16 @@ import BannersPage from "./pages/admin/BannersPage";
 import CategoriesPage from "./pages/admin/CategoriesPage";
 import ServicesPage from "./pages/admin/ServicesPage";
 import LocationsPage from "./pages/admin/LocationsPage";
+import GodownsPage from "./pages/admin/GodownsPage";
 import PennyServices from "./pages/PennyServices";
+import DeliveryStaffSignup from "./pages/delivery-staff/Signup";
+import DeliveryStaffLogin from "./pages/delivery-staff/Login";
+import DeliveryStaffForgotPassword from "./pages/delivery-staff/ForgotPasswordPage";
+import DeliveryStaffDashboard from "./pages/delivery-staff/Dashboard";
+import SellingPartnerSignup from "./pages/selling-partner/Signup";
+import SellingPartnerLogin from "./pages/selling-partner/Login";
+import SellingPartnerForgotPassword from "./pages/selling-partner/ForgotPasswordPage";
+import SellingPartnerDashboard from "./pages/selling-partner/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -47,7 +57,29 @@ const App = () => {
               <Route path="/admin/categories" element={<ProtectedRoute requirePermission="read_categories"><CategoriesPage /></ProtectedRoute>} />
               <Route path="/admin/services" element={<ProtectedRoute requirePermission="read_services"><ServicesPage /></ProtectedRoute>} />
               <Route path="/admin/locations" element={<ProtectedRoute requirePermission="read_locations"><LocationsPage /></ProtectedRoute>} />
+              <Route path="/admin/godowns" element={<ProtectedRoute requirePermission="read_godowns"><GodownsPage /></ProtectedRoute>} />
               <Route path="/services" element={<PennyServices />} />
+
+              {/* Delivery Staff */}
+              <Route path="/delivery-staff/signup" element={<DeliveryStaffSignup />} />
+              <Route path="/delivery-staff/login" element={<DeliveryStaffLogin />} />
+              <Route path="/delivery-staff/forgot-password" element={<DeliveryStaffForgotPassword />} />
+              <Route path="/delivery-staff/dashboard" element={
+                <ProtectedPartnerRoute userType="delivery_staff" loginPath="/delivery-staff/login">
+                  <DeliveryStaffDashboard />
+                </ProtectedPartnerRoute>
+              } />
+
+              {/* Selling Partner */}
+              <Route path="/selling-partner/signup" element={<SellingPartnerSignup />} />
+              <Route path="/selling-partner/login" element={<SellingPartnerLogin />} />
+              <Route path="/selling-partner/forgot-password" element={<SellingPartnerForgotPassword />} />
+              <Route path="/selling-partner/dashboard" element={
+                <ProtectedPartnerRoute userType="selling_partner" loginPath="/selling-partner/login">
+                  <SellingPartnerDashboard />
+                </ProtectedPartnerRoute>
+              } />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

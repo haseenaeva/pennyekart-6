@@ -86,6 +86,159 @@ export type Database = {
         }
         Relationships: []
       }
+      godown_local_bodies: {
+        Row: {
+          created_at: string
+          godown_id: string
+          id: string
+          local_body_id: string
+        }
+        Insert: {
+          created_at?: string
+          godown_id: string
+          id?: string
+          local_body_id: string
+        }
+        Update: {
+          created_at?: string
+          godown_id?: string
+          id?: string
+          local_body_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "godown_local_bodies_godown_id_fkey"
+            columns: ["godown_id"]
+            isOneToOne: false
+            referencedRelation: "godowns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "godown_local_bodies_local_body_id_fkey"
+            columns: ["local_body_id"]
+            isOneToOne: false
+            referencedRelation: "locations_local_bodies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      godown_stock: {
+        Row: {
+          batch_number: string | null
+          created_at: string
+          expiry_date: string | null
+          godown_id: string
+          id: string
+          product_id: string
+          purchase_price: number
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          batch_number?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          godown_id: string
+          id?: string
+          product_id: string
+          purchase_price?: number
+          quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          godown_id?: string
+          id?: string
+          product_id?: string
+          purchase_price?: number
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "godown_stock_godown_id_fkey"
+            columns: ["godown_id"]
+            isOneToOne: false
+            referencedRelation: "godowns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "godown_stock_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      godown_wards: {
+        Row: {
+          created_at: string
+          godown_id: string
+          id: string
+          local_body_id: string
+          ward_number: number
+        }
+        Insert: {
+          created_at?: string
+          godown_id: string
+          id?: string
+          local_body_id: string
+          ward_number: number
+        }
+        Update: {
+          created_at?: string
+          godown_id?: string
+          id?: string
+          local_body_id?: string
+          ward_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "godown_wards_godown_id_fkey"
+            columns: ["godown_id"]
+            isOneToOne: false
+            referencedRelation: "godowns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "godown_wards_local_body_id_fkey"
+            columns: ["local_body_id"]
+            isOneToOne: false
+            referencedRelation: "locations_local_bodies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      godowns: {
+        Row: {
+          created_at: string
+          godown_type: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          godown_type?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          godown_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       locations_districts: {
         Row: {
           country: string
@@ -275,40 +428,62 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          date_of_birth: string | null
           email: string | null
           full_name: string | null
           id: string
           is_approved: boolean
           is_super_admin: boolean
+          local_body_id: string | null
+          mobile_number: string | null
           role_id: string | null
           updated_at: string
           user_id: string
+          user_type: string
+          ward_number: number | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           is_approved?: boolean
           is_super_admin?: boolean
+          local_body_id?: string | null
+          mobile_number?: string | null
           role_id?: string | null
           updated_at?: string
           user_id: string
+          user_type?: string
+          ward_number?: number | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           is_approved?: boolean
           is_super_admin?: boolean
+          local_body_id?: string | null
+          mobile_number?: string | null
           role_id?: string | null
           updated_at?: string
           user_id?: string
+          user_type?: string
+          ward_number?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_local_body_id_fkey"
+            columns: ["local_body_id"]
+            isOneToOne: false
+            referencedRelation: "locations_local_bodies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_role_id_fkey"
             columns: ["role_id"]
@@ -378,6 +553,62 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_products: {
+        Row: {
+          area_godown_id: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_approved: boolean
+          name: string
+          price: number
+          seller_id: string
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          area_godown_id?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_approved?: boolean
+          name: string
+          price?: number
+          seller_id: string
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          area_godown_id?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_approved?: boolean
+          name?: string
+          price?: number
+          seller_id?: string
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_products_area_godown_id_fkey"
+            columns: ["area_godown_id"]
+            isOneToOne: false
+            referencedRelation: "godowns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           category: string | null
@@ -419,6 +650,70 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      stock_transfers: {
+        Row: {
+          batch_number: string | null
+          created_at: string
+          created_by: string | null
+          from_godown_id: string
+          id: string
+          product_id: string
+          quantity: number
+          status: string
+          to_godown_id: string
+          transfer_type: string
+          updated_at: string
+        }
+        Insert: {
+          batch_number?: string | null
+          created_at?: string
+          created_by?: string | null
+          from_godown_id: string
+          id?: string
+          product_id: string
+          quantity: number
+          status?: string
+          to_godown_id: string
+          transfer_type?: string
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: string | null
+          created_at?: string
+          created_by?: string | null
+          from_godown_id?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          status?: string
+          to_godown_id?: string
+          transfer_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfers_from_godown_id_fkey"
+            columns: ["from_godown_id"]
+            isOneToOne: false
+            referencedRelation: "godowns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfers_to_godown_id_fkey"
+            columns: ["to_godown_id"]
+            isOneToOne: false
+            referencedRelation: "godowns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

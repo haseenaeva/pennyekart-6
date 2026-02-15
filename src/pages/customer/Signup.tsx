@@ -84,9 +84,8 @@ const CustomerSignup = () => {
         toast({ title: "Signup failed", description: error.message, variant: "destructive" });
       }
     } else {
-      await supabase.auth.signOut();
-      toast({ title: "Registration successful!", description: "Your account is pending admin approval." });
-      navigate("/customer/login");
+      toast({ title: "Registration successful!", description: "You can now start shopping." });
+      navigate("/");
     }
     setLoading(false);
   };

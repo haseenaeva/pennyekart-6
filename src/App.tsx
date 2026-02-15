@@ -31,6 +31,8 @@ import SellingPartnerSignup from "./pages/selling-partner/Signup";
 import SellingPartnerLogin from "./pages/selling-partner/Login";
 import SellingPartnerForgotPassword from "./pages/selling-partner/ForgotPasswordPage";
 import SellingPartnerDashboard from "./pages/selling-partner/Dashboard";
+import CustomerSignup from "./pages/customer/Signup";
+import CustomerLogin from "./pages/customer/Login";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +73,10 @@ const App = () => {
                   <DeliveryStaffDashboard />
                 </ProtectedPartnerRoute>
               } />
+
+              {/* Customer */}
+              <Route path="/customer/signup" element={<CustomerSignup />} />
+              <Route path="/customer/login" element={<CustomerLogin />} />
 
               {/* Selling Partner */}
               <Route path="/selling-partner/signup" element={<SellingPartnerSignup />} />

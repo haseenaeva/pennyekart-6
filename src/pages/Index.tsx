@@ -8,6 +8,9 @@ import GroceryCategories from "@/components/GroceryCategories";
 import ProductRow from "@/components/ProductRow";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/hooks/useAuth";
+import { useAreaProducts } from "@/hooks/useAreaProducts";
+import { Star } from "lucide-react";
 
 const mostOrdered = [
   { name: "Wireless Bluetooth Earbuds", price: 499, originalPrice: 1299, rating: 4.3, image: "https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=300&h=300&fit=crop" },
@@ -39,6 +42,19 @@ const lowBudget = [
 const Index = () => {
   const [platform, setPlatform] = useState("pennyekart");
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const { products: areaProducts, loading: areaLoading } = useAreaProducts();
+
+  const isCustomer = user && profile?.user_type === "customer";
+
+  // Convert area products to ProductRow format
+  const areaProductRows = areaProducts.map(p => ({
+    name: p.name,
+    price: p.price,
+    originalPrice: p.mrp > p.price ? p.mrp : undefined,
+    rating: 4.5,
+    image: p.image_url || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
+  }));
 
   const handlePlatformSelect = (id: string) => {
     if (id === "pennyservices") {
@@ -59,9 +75,22 @@ const Index = () => {
         <CategoryBar />
         <BannerCarousel />
         <GroceryCategories />
-        <ProductRow title="Most Ordered Items" products={mostOrdered} />
-        <ProductRow title="New Arrivals" products={newArrivals} />
-        <ProductRow title="Low Budget Picks" products={lowBudget} />
+
+        {isCustomer ? (
+          areaLoading ? (
+            <div className="py-8 text-center text-muted-foreground">Loading products for your area...</div>
+          ) : areaProductRows.length > 0 ? (
+            <ProductRow title="Available in Your Area" products={areaProductRows} />
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">No products available in your area yet.</div>
+          )
+        ) : (
+          <>
+            <ProductRow title="Most Ordered Items" products={mostOrdered} />
+            <ProductRow title="New Arrivals" products={newArrivals} />
+            <ProductRow title="Low Budget Picks" products={lowBudget} />
+          </>
+        )}
       </main>
 
       <Footer />

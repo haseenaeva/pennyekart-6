@@ -1,0 +1,79 @@
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/logo.png";
+
+const CUSTOMER_PASSWORD = "pennyekart_customer_2024";
+
+const CustomerLogin = () => {
+  const [mobile, setMobile] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{10}$/.test(mobile)) {
+      toast({ title: "Enter a valid 10-digit mobile number", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+
+    const email = `${mobile}@pennyekart.local`;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: CUSTOMER_PASSWORD });
+
+    if (error) {
+      toast({ title: "Login failed", description: "Mobile number not registered or invalid.", variant: "destructive" });
+    } else {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_approved, user_type")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (!profile || profile.user_type !== "customer") {
+        await supabase.auth.signOut();
+        toast({ title: "Access denied", description: "This login is for customers only.", variant: "destructive" });
+      } else if (!profile.is_approved) {
+        await supabase.auth.signOut();
+        toast({ title: "Account pending", description: "Your account is awaiting admin approval.", variant: "destructive" });
+      } else {
+        navigate("/");
+      }
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <img src={logo} alt="Pennyekart" className="mx-auto mb-4 h-12" />
+          <CardTitle className="text-2xl">Customer Login</CardTitle>
+          <CardDescription>Enter your mobile number to continue</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="mobile">Mobile Number</Label>
+              <Input id="mobile" type="tel" placeholder="10-digit number" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))} required />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              New customer? <Link to="/customer/signup" className="text-primary underline">Sign up here</Link>
+            </p>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default CustomerLogin;

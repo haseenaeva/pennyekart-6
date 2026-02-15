@@ -422,7 +422,7 @@ const GodownsPage = () => {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground">Stock Items ({stock.length})</p>
-          {g.godown_type !== "micro" && (
+          {g.godown_type === "area" && (
             <Button size="sm" onClick={() => { setStockGodown(g); setStockForm({ product_id: "", quantity: 0, purchase_price: 0, batch_number: "", expiry_date: "" }); setStockDialogOpen(true); }}>
               <Plus className="mr-1 h-3 w-3" /> Add Stock
             </Button>

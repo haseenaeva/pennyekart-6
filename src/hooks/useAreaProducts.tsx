@@ -58,22 +58,37 @@ export const useAreaProducts = () => {
         .in("godown_id", Array.from(godownIds))
         .gt("quantity", 0);
 
-      if (!stockData?.length) {
-        setProducts([]);
-        setLoading(false);
-        return;
+      let allProducts: AreaProduct[] = [];
+
+      if (stockData?.length) {
+        const productIds = [...new Set(stockData.map(s => s.product_id))];
+        const { data: productData } = await supabase
+          .from("products")
+          .select("id, name, price, mrp, discount_rate, image_url, description, category, section, stock")
+          .in("id", productIds)
+          .eq("is_active", true);
+        if (productData) allProducts.push(...(productData as AreaProduct[]));
       }
 
-      const productIds = [...new Set(stockData.map(s => s.product_id))];
+      // Also fetch approved seller products assigned to these godowns
+      const { data: sellerProducts } = await supabase
+        .from("seller_products")
+        .select("id, name, price, mrp, discount_rate, image_url, description, category, stock")
+        .in("area_godown_id", Array.from(godownIds))
+        .eq("is_active", true)
+        .eq("is_approved", true)
+        .gt("stock", 0);
 
-      // Get product details
-      const { data: productData } = await supabase
-        .from("products")
-        .select("id, name, price, mrp, discount_rate, image_url, description, category, section, stock")
-        .in("id", productIds)
-        .eq("is_active", true);
+      if (sellerProducts) {
+        allProducts.push(
+          ...sellerProducts.map(sp => ({
+            ...sp,
+            section: "seller" as string | null,
+          } as AreaProduct))
+        );
+      }
 
-      setProducts((productData as AreaProduct[]) ?? []);
+      setProducts(allProducts);
       setLoading(false);
     };
 

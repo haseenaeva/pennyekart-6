@@ -1,17 +1,70 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Minus, Plus, Trash2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/hooks/useAuth";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Cart = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeItem, clearCart, totalPrice, totalItems } = useCart();
+  const { user } = useAuth();
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [placingOrder, setPlacingOrder] = useState(false);
 
   const totalMrp = items.reduce((s, i) => s + i.mrp * i.quantity, 0);
   const totalDiscount = totalMrp - totalPrice;
   const platformFee = items.length > 0 ? 7 : 0;
   const finalAmount = totalPrice + platformFee;
+
+  const handlePlaceOrder = () => {
+    if (!user) {
+      toast.error("Please login to place an order");
+      navigate("/customer/login");
+      return;
+    }
+    setShowPayment(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    setPlacingOrder(true);
+    try {
+      const orderItems = items.map(i => ({
+        id: i.id,
+        name: i.name,
+        price: i.price,
+        mrp: i.mrp,
+        quantity: i.quantity,
+        image: i.image,
+      }));
+
+      const { error } = await supabase.from("orders").insert({
+        user_id: user!.id,
+        items: orderItems,
+        total: finalAmount,
+        status: "pending",
+        shipping_address: paymentMethod === "cod" ? "Cash on Delivery" : paymentMethod,
+      });
+
+      if (error) throw error;
+
+      clearCart();
+      setShowPayment(false);
+      toast.success("Order placed successfully!");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to place order");
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -97,7 +150,7 @@ const Cart = () => {
 
             {/* Place Order - bottom of left card (mobile) */}
             <div className="border-t border-border p-4 lg:hidden">
-              <Button className="w-full text-base font-semibold py-5">Place Order</Button>
+              <Button className="w-full text-base font-semibold py-5" onClick={handlePlaceOrder}>Place Order</Button>
             </div>
           </div>
 
@@ -146,7 +199,7 @@ const Cart = () => {
 
             {/* Place Order - desktop */}
             <div className="hidden lg:block">
-              <Button className="w-full text-base font-semibold py-5">Place Order</Button>
+              <Button className="w-full text-base font-semibold py-5" onClick={handlePlaceOrder}>Place Order</Button>
             </div>
 
             {/* Trust badge */}
@@ -157,6 +210,35 @@ const Cart = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Method Dialog */}
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Payment Method</DialogTitle>
+            <DialogDescription>Choose how you'd like to pay for your order.</DialogDescription>
+          </DialogHeader>
+          <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="gap-3 py-2">
+            <div className="flex items-center space-x-3 rounded-lg border border-border p-3">
+              <RadioGroupItem value="cod" id="cod" />
+              <Label htmlFor="cod" className="flex-1 cursor-pointer">
+                <span className="font-medium">Cash on Delivery</span>
+                <p className="text-xs text-muted-foreground">Pay when your order arrives</p>
+              </Label>
+            </div>
+          </RadioGroup>
+          <div className="flex justify-between text-sm font-bold pt-2">
+            <span>Total: </span>
+            <span>₹{finalAmount.toFixed(2)}</span>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPayment(false)}>Cancel</Button>
+            <Button onClick={handleConfirmOrder} disabled={placingOrder}>
+              {placingOrder ? "Placing..." : "Confirm Order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

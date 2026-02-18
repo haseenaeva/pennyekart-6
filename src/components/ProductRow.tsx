@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star, TrendingUp, Sparkles, Wallet, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export interface Product {
@@ -14,16 +14,34 @@ interface ProductRowProps {
   title: string;
   products: Product[];
   linkPrefix?: string;
+  sectionKey?: string;
 }
 
-const ProductRow = ({ title, products, linkPrefix = "/product/" }: ProductRowProps) => {
+const sectionMeta: Record<string, { icon: React.ElementType; gradient: string; badge: string }> = {
+  featured: { icon: Star, gradient: "from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/20", badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300" },
+  most_ordered: { icon: TrendingUp, gradient: "from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+  new_arrivals: { icon: Sparkles, gradient: "from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/20", badge: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
+  low_budget: { icon: Wallet, gradient: "from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/20", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
+  sponsors: { icon: Megaphone, gradient: "from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/20", badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
+};
+
+const ProductRow = ({ title, products, linkPrefix = "/product/", sectionKey }: ProductRowProps) => {
   const navigate = useNavigate();
+  const meta = sectionKey ? sectionMeta[sectionKey] : null;
+  const Icon = meta?.icon;
 
   return (
-    <section className="bg-card py-4">
+    <section className={`py-4 ${meta ? `bg-gradient-to-r ${meta.gradient}` : "bg-card"}`}>
       <div className="container">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-heading text-lg font-bold text-foreground md:text-xl">{title}</h2>
+          <div className="flex items-center gap-2">
+            {Icon && (
+              <span className={`flex items-center justify-center rounded-lg p-1.5 ${meta!.badge}`}>
+                <Icon className="h-4 w-4" />
+              </span>
+            )}
+            <h2 className="font-heading text-lg font-bold text-foreground md:text-xl">{title}</h2>
+          </div>
           <button className="text-sm font-semibold text-primary hover:underline">View All</button>
         </div>
 
@@ -68,3 +86,4 @@ const ProductRow = ({ title, products, linkPrefix = "/product/" }: ProductRowPro
 };
 
 export default ProductRow;
+

@@ -103,7 +103,7 @@ const Index = () => {
       return <div className="py-8 text-center text-muted-foreground">No products available yet.</div>;
     }
     return sections.map(sec => (
-      <ProductRow key={sec} title={sectionGrouped[sec].label} products={toRowFormat(sectionGrouped[sec].items)} />
+      <ProductRow key={sec} title={sectionGrouped[sec].label} products={toRowFormat(sectionGrouped[sec].items)} sectionKey={sec} />
     ));
   };
 

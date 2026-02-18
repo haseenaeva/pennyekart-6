@@ -1019,6 +1019,29 @@ export type Database = {
     }
     Functions: {
       get_next_purchase_number: { Args: never; Returns: number }
+      get_orders_for_seller: {
+        Args: { seller_user_id: string }
+        Returns: {
+          assigned_delivery_staff_id: string | null
+          created_at: string
+          godown_id: string | null
+          id: string
+          items: Json
+          seller_id: string | null
+          seller_product_id: string | null
+          shipping_address: string | null
+          status: string
+          total: number
+          updated_at: string
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_permission: { Args: { _permission_name: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
     }

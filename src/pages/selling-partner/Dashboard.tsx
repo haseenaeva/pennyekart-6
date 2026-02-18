@@ -132,27 +132,12 @@ const SellingPartnerDashboard = () => {
     if (data) setCategories(data as Category[]);
   };
 
-  const fetchOrders = async (myProducts: SellerProduct[]) => {
+  const fetchOrders = async (_myProducts: SellerProduct[]) => {
     if (!user) return;
-    // Fetch orders where seller_id matches OR where items contain any of seller's product IDs
-    const { data: directOrders } = await supabase.from("orders").select("*").eq("seller_id", user.id).order("created_at", { ascending: false });
-
-    // Also find orders where items jsonb contains seller's product IDs
-    const productIds = myProducts.map(p => p.id);
-    let itemOrders: Order[] = [];
-    if (productIds.length > 0) {
-      // Use contains filter on jsonb array - pass array object (not stringified)
-      for (const pid of productIds) {
-        const { data } = await supabase.from("orders").select("*").contains("items", [{ id: pid }]);
-        if (data) itemOrders.push(...(data as Order[]));
-      }
-    }
-
-    // Merge and deduplicate
-    const allOrders = [...(directOrders ?? []), ...itemOrders];
-    const seen = new Set<string>();
-    const unique = allOrders.filter(o => { if (seen.has(o.id)) return false; seen.add(o.id); return true; });
-    unique.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    // Use server-side RPC for reliable JSONB scanning across seller's products
+    const { data, error } = await supabase.rpc("get_orders_for_seller", { seller_user_id: user.id });
+    if (error) console.error("fetchOrders error:", error.message);
+    const unique = (data as Order[]) ?? [];
     setOrders(unique);
     return unique;
   };

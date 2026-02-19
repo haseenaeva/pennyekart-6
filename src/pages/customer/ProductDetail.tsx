@@ -269,7 +269,7 @@ const ProductDetail = () => {
                 {slides.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => { setActiveSlide(i); startAutoSlide(); }}
+                  onClick={() => { setActiveSlide(i); if (autoSlideRef.current) clearInterval(autoSlideRef.current); }}
                     className={`h-2 w-2 rounded-full transition-all ${
                       activeSlide === i ? "bg-primary w-4" : "bg-foreground/30"
                     }`}
@@ -283,7 +283,7 @@ const ProductDetail = () => {
               {slides.map((slide, i) => (
                 <button
                   key={i}
-                  onClick={() => { setActiveSlide(i); startAutoSlide(); }}
+                  onClick={() => { setActiveSlide(i); if (autoSlideRef.current) clearInterval(autoSlideRef.current); }}
                   className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
                     activeSlide === i ? "border-primary" : "border-border"
                   }`}

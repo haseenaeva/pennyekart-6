@@ -17,10 +17,10 @@ const SearchBar = () => {
   const isLoggedIn = !!user;
 
   const updatePosition = useCallback(() => {
-    const activeBtn = mobileButtonRef.current || buttonRef.current;
+    const isMobile = window.innerWidth < 640;
+    const activeBtn = isMobile ? mobileButtonRef.current : buttonRef.current;
     if (activeBtn) {
       const rect = activeBtn.getBoundingClientRect();
-      const isMobile = window.innerWidth < 640;
       setDropdownPos({
         top: rect.bottom + 8,
         right: isMobile ? 8 : Math.max(8, window.innerWidth - rect.right),
@@ -33,8 +33,8 @@ const SearchBar = () => {
       const target = e.target as Node;
       if (
         dropdownRef.current && !dropdownRef.current.contains(target) &&
-        buttonRef.current && !buttonRef.current.contains(target) &&
-        mobileButtonRef.current && !mobileButtonRef.current.contains(target)
+        (!buttonRef.current || !buttonRef.current.contains(target)) &&
+        (!mobileButtonRef.current || !mobileButtonRef.current.contains(target))
       ) {
         setDropdownOpen(false);
       }

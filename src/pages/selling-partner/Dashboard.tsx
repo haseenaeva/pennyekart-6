@@ -75,7 +75,7 @@ const STATUS_LABELS: Record<string, string> = {
 const emptyForm = {
   name: "", description: "", price: "", category: "", stock: "",
   area_godown_id: "", image_url: "", image_url_2: "", image_url_3: "",
-  purchase_rate: "", mrp: "", discount_rate: "", is_featured: false,
+  purchase_rate: "", mrp: "", discount_rate: "", is_featured: false, video_url: "",
 };
 
 const SellingPartnerDashboard = () => {
@@ -312,6 +312,7 @@ const SellingPartnerDashboard = () => {
       image_url_2: form.image_url_2 || null,
       image_url_3: form.image_url_3 || null,
       is_featured: form.is_featured,
+      video_url: form.video_url.trim() || null,
     });
     if (error) {
       toast({ title: "Failed", description: error.message, variant: "destructive" });
@@ -330,6 +331,7 @@ const SellingPartnerDashboard = () => {
       image_url_2: p.image_url_2 ?? "", image_url_3: p.image_url_3 ?? "",
       purchase_rate: String(p.purchase_rate), mrp: String(p.mrp),
       discount_rate: String(p.discount_rate), is_featured: p.is_featured,
+      video_url: (p as any).video_url ?? "",
     });
     setEditDialogOpen(true);
   };
@@ -352,6 +354,7 @@ const SellingPartnerDashboard = () => {
       image_url_2: editForm.image_url_2 || null,
       image_url_3: editForm.image_url_3 || null,
       is_featured: editForm.is_featured,
+      video_url: editForm.video_url.trim() || null,
     }).eq("id", editProduct.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -470,6 +473,7 @@ const SellingPartnerDashboard = () => {
                     {form.image_url_2 && <img src={form.image_url_2} alt="Preview 2" className="h-20 w-20 rounded-md border object-cover" />}
                     <div><Label>Image 3 (URL)</Label><Input value={form.image_url_3} onChange={e => setForm({ ...form, image_url_3: e.target.value })} placeholder="Paste image URL" /></div>
                     {form.image_url_3 && <img src={form.image_url_3} alt="Preview 3" className="h-20 w-20 rounded-md border object-cover" />}
+                    <div><Label>Video URL</Label><Input value={form.video_url} onChange={e => setForm({ ...form, video_url: e.target.value })} placeholder="Paste YouTube or video link" /></div>
                     <div>
                       <Label>Area Godown (assigned by admin)</Label>
                       <Select value={form.area_godown_id} onValueChange={v => setForm({ ...form, area_godown_id: v })}>
@@ -584,6 +588,7 @@ const SellingPartnerDashboard = () => {
                   <ImageUpload bucket="products" value={editForm.image_url} onChange={url => setEditForm({ ...editForm, image_url: url })} label="Image 1" />
                   <div><Label>Image 2 (URL)</Label><Input value={editForm.image_url_2} onChange={e => setEditForm({ ...editForm, image_url_2: e.target.value })} /></div>
                   <div><Label>Image 3 (URL)</Label><Input value={editForm.image_url_3} onChange={e => setEditForm({ ...editForm, image_url_3: e.target.value })} /></div>
+                  <div><Label>Video URL</Label><Input value={editForm.video_url} onChange={e => setEditForm({ ...editForm, video_url: e.target.value })} placeholder="Paste YouTube or video link" /></div>
                    <div className="flex items-center gap-2 rounded-lg border p-3">
                      <Star className="h-4 w-4 text-yellow-500" />
                      <div className="flex-1"><Label className="text-sm font-medium">Featured Product</Label></div>

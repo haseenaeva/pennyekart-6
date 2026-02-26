@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import * as LucideIcons from "lucide-react";
 
@@ -38,21 +38,23 @@ interface CategoryBarProps {
   selectedCategory?: string | null;
 }
 
-const CategoryBar = ({ onCategoryClick, selectedCategory }: CategoryBarProps) => {
-  const [categories, setCategories] = useState<GeneralCategory[]>([]);
+const fetchGeneralCategories = async (): Promise<GeneralCategory[]> => {
+  const { data } = await supabase
+    .from("categories")
+    .select("id, name, icon, image_url")
+    .eq("category_type", "general")
+    .eq("is_active", true)
+    .order("sort_order");
+  return (data as GeneralCategory[]) ?? [];
+};
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select("id, name, icon, image_url")
-        .eq("category_type", "general")
-        .eq("is_active", true)
-        .order("sort_order");
-      setCategories((data as GeneralCategory[]) ?? []);
-    };
-    fetch();
-  }, []);
+const CategoryBar = ({ onCategoryClick, selectedCategory }: CategoryBarProps) => {
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories", "general"],
+    queryFn: fetchGeneralCategories,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
 
   if (categories.length === 0) return null;
 
@@ -71,7 +73,7 @@ const CategoryBar = ({ onCategoryClick, selectedCategory }: CategoryBarProps) =>
           compact ? "h-12 w-12" : "h-10 w-10"
         } ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-secondary group-hover:text-secondary-foreground"}`}>
           {c.image_url ? (
-            <img src={c.image_url} alt={c.name} className={`rounded-full object-cover ${compact ? "h-12 w-12" : "h-10 w-10"}`} />
+            <img src={c.image_url} alt={c.name} loading="lazy" className={`rounded-full object-cover ${compact ? "h-12 w-12" : "h-10 w-10"}`} />
           ) : (
             <Icon className="h-5 w-5" />
           )}
@@ -103,4 +105,3 @@ const CategoryBar = ({ onCategoryClick, selectedCategory }: CategoryBarProps) =>
 };
 
 export default CategoryBar;
-

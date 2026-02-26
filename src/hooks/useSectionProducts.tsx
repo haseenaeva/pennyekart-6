@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SectionProduct {
@@ -21,23 +21,24 @@ const sectionLabels: Record<string, string> = {
   sponsors: "Sponsors",
 };
 
-export const useSectionProducts = () => {
-  const [products, setProducts] = useState<SectionProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+const fetchSectionProducts = async (): Promise<SectionProduct[]> => {
+  const { data } = await supabase
+    .from("products")
+    .select("id, name, price, mrp, discount_rate, image_url, category, section, coming_soon")
+    .eq("is_active", true)
+    .not("section", "is", null)
+    .neq("section", "")
+    .limit(50);
+  return (data as SectionProduct[]) ?? [];
+};
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("id, name, price, mrp, discount_rate, image_url, category, section, coming_soon")
-        .eq("is_active", true)
-        .not("section", "is", null)
-        .neq("section", "");
-      setProducts((data as SectionProduct[]) ?? []);
-      setLoading(false);
-    };
-    fetch();
-  }, []);
+export const useSectionProducts = () => {
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ["section-products"],
+    queryFn: fetchSectionProducts,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
   // Group by section
   const grouped = products.reduce<Record<string, { label: string; items: SectionProduct[] }>>((acc, p) => {

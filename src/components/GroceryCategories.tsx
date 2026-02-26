@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import * as LucideIcons from "lucide-react";
 
@@ -30,21 +30,23 @@ interface GroceryCategoriesProps {
   selectedCategory?: string | null;
 }
 
-const GroceryCategories = ({ onCategoryClick, selectedCategory }: GroceryCategoriesProps) => {
-  const [categories, setCategories] = useState<GroceryCategory[]>([]);
+const fetchGroceryCategories = async (): Promise<GroceryCategory[]> => {
+  const { data } = await supabase
+    .from("categories")
+    .select("id, name, icon, image_url")
+    .eq("category_type", "grocery")
+    .eq("is_active", true)
+    .order("sort_order");
+  return (data as GroceryCategory[]) ?? [];
+};
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("categories")
-        .select("id, name, icon, image_url")
-        .eq("category_type", "grocery")
-        .eq("is_active", true)
-        .order("sort_order");
-      setCategories((data as GroceryCategory[]) ?? []);
-    };
-    fetch();
-  }, []);
+const GroceryCategories = ({ onCategoryClick, selectedCategory }: GroceryCategoriesProps) => {
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories", "grocery"],
+    queryFn: fetchGroceryCategories,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
 
   if (categories.length === 0) return null;
 
@@ -63,7 +65,7 @@ const GroceryCategories = ({ onCategoryClick, selectedCategory }: GroceryCategor
           compact ? "h-11 w-11" : "h-12 w-12"
         } ${isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"}`}>
           {g.image_url ? (
-            <img src={g.image_url} alt={g.name} className={`rounded-full object-cover ${compact ? "h-11 w-11" : "h-12 w-12"}`} />
+            <img src={g.image_url} alt={g.name} loading="lazy" className={`rounded-full object-cover ${compact ? "h-11 w-11" : "h-12 w-12"}`} />
           ) : (
             <Icon className={compact ? "h-5 w-5" : "h-6 w-6"} />
           )}
@@ -81,11 +83,9 @@ const GroceryCategories = ({ onCategoryClick, selectedCategory }: GroceryCategor
         <h2 className="mb-3 font-heading text-lg font-bold text-foreground md:text-xl">
           Grocery & Essentials
         </h2>
-        {/* Desktop */}
         <div className="hidden md:flex items-center gap-3 overflow-x-auto scrollbar-hide">
           {categories.map((g) => renderButton(g))}
         </div>
-        {/* Mobile: two rows */}
         <div className="md:hidden space-y-2">
           <div className="flex gap-3 overflow-x-auto scrollbar-hide">
             {categories.slice(0, half).map((g) => renderButton(g, true))}

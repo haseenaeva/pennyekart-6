@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -16,87 +16,84 @@ export interface AreaProduct {
   coming_soon?: boolean;
 }
 
+const fetchAreaProducts = async (localBodyId: string, wardNumber: number): Promise<AreaProduct[]> => {
+  // Get micro godown IDs and area godown IDs in parallel
+  const [microRes, areaRes] = await Promise.all([
+    supabase
+      .from("godown_wards")
+      .select("godown_id, godowns!inner(godown_type)")
+      .eq("local_body_id", localBodyId)
+      .eq("ward_number", wardNumber)
+      .eq("godowns.godown_type", "micro"),
+    supabase
+      .from("godown_local_bodies")
+      .select("godown_id, godowns!inner(godown_type)")
+      .eq("local_body_id", localBodyId)
+      .eq("godowns.godown_type", "area"),
+  ]);
+
+  const godownIds = new Set<string>();
+  microRes.data?.forEach(r => godownIds.add(r.godown_id));
+  areaRes.data?.forEach(r => godownIds.add(r.godown_id));
+
+  if (godownIds.size === 0) return [];
+
+  const godownArr = Array.from(godownIds);
+
+  // Fetch stock and seller products in parallel
+  const [stockRes, sellerRes] = await Promise.all([
+    supabase
+      .from("godown_stock")
+      .select("product_id, quantity")
+      .in("godown_id", godownArr)
+      .gt("quantity", 0),
+    supabase
+      .from("seller_products")
+      .select("id, name, price, mrp, discount_rate, image_url, description, category, stock, coming_soon")
+      .in("area_godown_id", godownArr)
+      .eq("is_active", true)
+      .eq("is_approved", true)
+      .gt("stock", 0)
+      .limit(30),
+  ]);
+
+  let allProducts: AreaProduct[] = [];
+
+  if (stockRes.data?.length) {
+    const productIds = [...new Set(stockRes.data.map(s => s.product_id))];
+    const { data: productData } = await supabase
+      .from("products")
+      .select("id, name, price, mrp, discount_rate, image_url, description, category, section, stock, coming_soon")
+      .in("id", productIds)
+      .eq("is_active", true)
+      .limit(50);
+    if (productData) allProducts.push(...(productData as AreaProduct[]));
+  }
+
+  if (sellerRes.data) {
+    allProducts.push(
+      ...sellerRes.data.map(sp => ({
+        ...sp,
+        section: "seller" as string | null,
+      } as AreaProduct))
+    );
+  }
+
+  return allProducts;
+};
+
 export const useAreaProducts = () => {
   const { profile } = useAuth();
-  const [products, setProducts] = useState<AreaProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const localBodyId = profile?.local_body_id;
+  const wardNumber = profile?.ward_number;
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      if (!profile?.local_body_id || !profile?.ward_number) {
-        setProducts([]);
-        setLoading(false);
-        return;
-      }
-
-      // Get micro godown IDs (matching panchayath + ward)
-      const { data: microWards } = await supabase
-        .from("godown_wards")
-        .select("godown_id, godowns!inner(godown_type)")
-        .eq("local_body_id", profile.local_body_id)
-        .eq("ward_number", profile.ward_number)
-        .eq("godowns.godown_type", "micro");
-
-      // Get area godown IDs (matching panchayath only, exclude local godowns)
-      const { data: areaLocalBodies } = await supabase
-        .from("godown_local_bodies")
-        .select("godown_id, godowns!inner(godown_type)")
-        .eq("local_body_id", profile.local_body_id)
-        .eq("godowns.godown_type", "area");
-
-      const godownIds = new Set<string>();
-      microWards?.forEach(r => godownIds.add(r.godown_id));
-      areaLocalBodies?.forEach(r => godownIds.add(r.godown_id));
-
-      if (godownIds.size === 0) {
-        setProducts([]);
-        setLoading(false);
-        return;
-      }
-
-      // Get product IDs from godown_stock for these godowns
-      const { data: stockData } = await supabase
-        .from("godown_stock")
-        .select("product_id, quantity")
-        .in("godown_id", Array.from(godownIds))
-        .gt("quantity", 0);
-
-      let allProducts: AreaProduct[] = [];
-
-      if (stockData?.length) {
-        const productIds = [...new Set(stockData.map(s => s.product_id))];
-        const { data: productData } = await supabase
-          .from("products")
-          .select("id, name, price, mrp, discount_rate, image_url, description, category, section, stock, coming_soon")
-          .in("id", productIds)
-          .eq("is_active", true);
-        if (productData) allProducts.push(...(productData as AreaProduct[]));
-      }
-
-      // Also fetch approved seller products assigned to these godowns
-      const { data: sellerProducts } = await supabase
-        .from("seller_products")
-        .select("id, name, price, mrp, discount_rate, image_url, description, category, stock, coming_soon")
-        .in("area_godown_id", Array.from(godownIds))
-        .eq("is_active", true)
-        .eq("is_approved", true)
-        .gt("stock", 0);
-
-      if (sellerProducts) {
-        allProducts.push(
-          ...sellerProducts.map(sp => ({
-            ...sp,
-            section: "seller" as string | null,
-          } as AreaProduct))
-        );
-      }
-
-      setProducts(allProducts);
-      setLoading(false);
-    };
-
-    fetchProducts();
-  }, [profile?.local_body_id, profile?.ward_number]);
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ["area-products", localBodyId, wardNumber],
+    queryFn: () => fetchAreaProducts(localBodyId!, wardNumber!),
+    enabled: !!localBodyId && !!wardNumber,
+    staleTime: 5 * 60 * 1000, // 5 min cache
+    gcTime: 10 * 60 * 1000,
+  });
 
   return { products, loading };
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 
@@ -39,69 +39,91 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
 
-  const fetchProfile = async (userId: string) => {
+  const clearAuth = useCallback(() => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+  }, []);
+
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .single();
-      setProfile(data as unknown as Profile | null);
+      if (error) {
+        console.error("Failed to fetch profile:", error);
+        if (mountedRef.current) setProfile(null);
+        return;
+      }
+      if (mountedRef.current) setProfile(data as unknown as Profile | null);
     } catch (err) {
       console.error("Failed to fetch profile:", err);
-      setProfile(null);
+      if (mountedRef.current) setProfile(null);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
     // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!mounted) return;
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          // Use setTimeout to avoid deadlock - don't await Supabase calls inside onAuthStateChange
-          setTimeout(() => {
-            if (mounted) {
-              fetchProfile(session.user.id).finally(() => {
-                if (mounted) setLoading(false);
-              });
-            }
-          }, 0);
-        } else {
-          setProfile(null);
+      (_event, newSession) => {
+        if (!mountedRef.current) return;
+        
+        if (_event === 'SIGNED_OUT' || !newSession) {
+          clearAuth();
           setLoading(false);
+          return;
         }
+
+        setSession(newSession);
+        setUser(newSession.user);
+
+        // Defer Supabase calls to avoid deadlock in onAuthStateChange
+        setTimeout(() => {
+          if (!mountedRef.current) return;
+          fetchProfile(newSession.user.id).finally(() => {
+            if (mountedRef.current) setLoading(false);
+          });
+        }, 0);
       }
     );
 
     // Then get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
+      if (!mountedRef.current) return;
+
+      if (error || !initialSession) {
+        clearAuth();
+        setLoading(false);
+        return;
       }
-      if (mounted) setLoading(false);
+
+      setSession(initialSession);
+      setUser(initialSession.user);
+      fetchProfile(initialSession.user.id).finally(() => {
+        if (mountedRef.current) setLoading(false);
+      });
     });
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [clearAuth, fetchProfile]);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-  };
+  const signOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // signOut may fail if session is already invalid, that's ok
+    }
+    clearAuth();
+  }, [clearAuth]);
 
   return (
     <AuthContext.Provider value={{ session, user, profile, loading, signOut }}>

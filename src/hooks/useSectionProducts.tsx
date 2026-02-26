@@ -22,14 +22,26 @@ const sectionLabels: Record<string, string> = {
 };
 
 const fetchSectionProducts = async (): Promise<SectionProduct[]> => {
-  const { data } = await supabase
+  // First try products with sections
+  const { data: sectionData } = await supabase
     .from("products")
     .select("id, name, price, mrp, discount_rate, image_url, category, section, coming_soon")
     .eq("is_active", true)
     .not("section", "is", null)
     .neq("section", "")
     .limit(50);
-  return (data as SectionProduct[]) ?? [];
+
+  if (sectionData && sectionData.length > 0) {
+    return sectionData as SectionProduct[];
+  }
+
+  // Fallback: fetch all active products (no section filter)
+  const { data: allData } = await supabase
+    .from("products")
+    .select("id, name, price, mrp, discount_rate, image_url, category, section, coming_soon")
+    .eq("is_active", true)
+    .limit(50);
+  return (allData as SectionProduct[]) ?? [];
 };
 
 export const useSectionProducts = () => {

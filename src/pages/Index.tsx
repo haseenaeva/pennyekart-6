@@ -152,11 +152,32 @@ const Index = () => {
 
     // For non-logged-in: show section-based products from DB
     const sections = sectionOrder.filter(s => sectionGrouped[s]?.items.length > 0);
-    if (sections.length === 0) {
-      return <div className="py-8 text-center text-muted-foreground">No products available yet.</div>;
+    if (sections.length > 0) {
+      return sections.map(sec => (
+        <ProductRow key={sec} title={sectionGrouped[sec].label} products={toRowFormat(sectionGrouped[sec].items)} sectionKey={sec} />
+      ));
     }
-    return sections.map(sec => (
-      <ProductRow key={sec} title={sectionGrouped[sec].label} products={toRowFormat(sectionGrouped[sec].items)} sectionKey={sec} />
+
+    // Fallback: show all products grouped by category
+    if (sectionLoading) {
+      return <div className="py-8 text-center text-muted-foreground">Loading products...</div>;
+    }
+    const allProducts = Object.values(sectionGrouped).flatMap(g => g.items);
+    if (allProducts.length === 0) {
+      // Also try ungrouped products from the hook
+      const flatProducts = Object.values(sectionGrouped).flatMap(g => g.items);
+      if (flatProducts.length === 0) {
+        return <div className="py-8 text-center text-muted-foreground">No products available yet.</div>;
+      }
+    }
+    const allByCategory = allProducts.reduce<Record<string, typeof allProducts>>((acc, p) => {
+      const cat = p.category || "Other";
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(p);
+      return acc;
+    }, {});
+    return Object.entries(allByCategory).map(([cat, items]) => (
+      <ProductRow key={cat} title={cat} products={toRowFormat(items)} />
     ));
   };
 

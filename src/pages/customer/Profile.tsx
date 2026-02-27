@@ -158,11 +158,55 @@ const Profile = () => {
 
           <div className="flex items-center justify-between p-4">
             <p className="text-sm font-bold">₹{order.total.toFixed(2)}</p>
-            {showTracking && order.status !== "cancelled" && (
-              <Button size="sm" variant="outline" onClick={() => setSelectedOrder(order)}>
-                Track Order <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {canCancel(order.status) && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="destructive">
+                      <XCircle className="h-4 w-4 mr-1" /> Cancel
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancel Order?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to cancel this order? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>No, keep it</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleCancelOrder(order.id)}>Yes, cancel</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {canRequestReturn(order.status) && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline">
+                      <RotateCcw className="h-4 w-4 mr-1" /> Return
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Request Return?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        A delivery/selling partner will need to confirm the return before stock is restored. Are you sure?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>No, keep it</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleRequestReturn(order.id)}>Yes, request return</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {showTracking && order.status !== "cancelled" && (
+                <Button size="sm" variant="outline" onClick={() => setSelectedOrder(order)}>
+                  Track <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Inline tracking for selected order */}

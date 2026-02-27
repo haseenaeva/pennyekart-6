@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, History, Warehouse, Store } from "lucide-react";
+import { Truck, History, Warehouse, Store, RotateCcw } from "lucide-react";
 
 interface Order {
   id: string;
@@ -47,9 +47,11 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
   const activeMicro = microOrders.filter(o => o.status !== "delivered");
   const activeArea = areaOrders.filter(o => o.status !== "delivered");
 
-  const activeOrders = orders.filter((o) => o.status !== "delivered");
+  const returnOrders = orders.filter(o => o.status === "return_requested");
+
+  const activeOrders = orders.filter((o) => !["delivered", "cancelled", "return_requested", "return_confirmed"].includes(o.status));
   const deliveredOrders = orders.filter((o) => {
-    if (o.status !== "delivered") return false;
+    if (!["delivered", "cancelled", "return_confirmed"].includes(o.status)) return false;
     if (dateFrom && new Date(o.created_at) < new Date(dateFrom)) return false;
     if (dateTo && new Date(o.created_at) > new Date(dateTo + "T23:59:59")) return false;
     return true;
@@ -74,7 +76,17 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
       await creditWallet(order);
       await deductSellerStock(order);
     }
-    toast({ title: `Order ${newStatus}` });
+    toast({ title: `Order ${newStatus.replace(/_/g, " ")}` });
+    onRefresh();
+  };
+
+  const confirmReturn = async (order: Order) => {
+    const { error } = await supabase.from("orders").update({ status: "return_confirmed" }).eq("id", order.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Return confirmed — stock restored" });
     onRefresh();
   };
 
@@ -200,9 +212,10 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
 
   return (
     <Tabs defaultValue="micro">
-      <TabsList className="w-full grid grid-cols-3">
+      <TabsList className="w-full grid grid-cols-4">
         <TabsTrigger value="micro"><Warehouse className="h-4 w-4 mr-1" /> Micro ({activeMicro.length})</TabsTrigger>
         <TabsTrigger value="area"><Store className="h-4 w-4 mr-1" /> Area ({activeArea.length})</TabsTrigger>
+        <TabsTrigger value="returns"><RotateCcw className="h-4 w-4 mr-1" /> Returns ({returnOrders.length})</TabsTrigger>
         <TabsTrigger value="history"><History className="h-4 w-4 mr-1" /> History</TabsTrigger>
       </TabsList>
 
@@ -224,6 +237,46 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
           </CardHeader>
           <CardContent className="pt-2">
             <OrderTable items={activeArea} showAction />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="returns">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">Return Requests — Confirm after verifying returned items</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Address</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {returnOrders.length === 0 ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No return requests</TableCell></TableRow>
+                  ) : returnOrders.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell className="font-mono text-xs">{o.id.slice(0, 8)}…</TableCell>
+                      <TableCell>₹{o.total}</TableCell>
+                      <TableCell className="text-sm max-w-[200px] truncate">{o.shipping_address ?? "—"}</TableCell>
+                      <TableCell><Badge variant="secondary">Return Requested</Badge></TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Button size="sm" onClick={() => confirmReturn(o)}>Confirm Return</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>

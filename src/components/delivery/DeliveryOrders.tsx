@@ -76,7 +76,17 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
       await creditWallet(order);
       await deductSellerStock(order);
     }
-    toast({ title: `Order ${newStatus}` });
+    toast({ title: `Order ${newStatus.replace(/_/g, " ")}` });
+    onRefresh();
+  };
+
+  const confirmReturn = async (order: Order) => {
+    const { error } = await supabase.from("orders").update({ status: "return_confirmed" }).eq("id", order.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Return confirmed — stock restored" });
     onRefresh();
   };
 

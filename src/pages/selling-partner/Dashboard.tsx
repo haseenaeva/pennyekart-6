@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import ImageUpload from "@/components/admin/ImageUpload";
 import ProductVariants from "@/components/admin/ProductVariants";
 import logo from "@/assets/logo.png";
+import NewOrderNotification from "@/components/NewOrderNotification";
 
 interface SellerProduct {
   id: string;
@@ -960,6 +961,17 @@ const SellingPartnerDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+      {user && (
+        <NewOrderNotification
+          userId={user.id}
+          role="seller"
+          onRefresh={() => {
+            fetchProducts();
+            fetchOrders(products);
+            fetchWallet();
+          }}
+        />
+      )}
     </div>
   );
 };

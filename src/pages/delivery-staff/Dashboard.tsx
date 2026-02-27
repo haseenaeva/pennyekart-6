@@ -9,6 +9,7 @@ import DeliveryStats from "@/components/delivery/DeliveryStats";
 import DeliveryOrders from "@/components/delivery/DeliveryOrders";
 import DeliveryWallet from "@/components/delivery/DeliveryWallet";
 import DeliveryStock from "@/components/delivery/DeliveryStock";
+import NewOrderNotification from "@/components/NewOrderNotification";
 
 interface Order {
   id: string;
@@ -125,6 +126,13 @@ const DeliveryStaffDashboard = () => {
           </Tabs>
         ) : null}
       </main>
+      {user && (
+        <NewOrderNotification
+          userId={user.id}
+          role="delivery"
+          onRefresh={fetchData}
+        />
+      )}
     </div>
   );
 };

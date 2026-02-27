@@ -241,6 +241,46 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
         </Card>
       </TabsContent>
 
+      <TabsContent value="returns">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">Return Requests — Confirm after verifying returned items</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Address</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {returnOrders.length === 0 ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No return requests</TableCell></TableRow>
+                  ) : returnOrders.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell className="font-mono text-xs">{o.id.slice(0, 8)}…</TableCell>
+                      <TableCell>₹{o.total}</TableCell>
+                      <TableCell className="text-sm max-w-[200px] truncate">{o.shipping_address ?? "—"}</TableCell>
+                      <TableCell><Badge variant="secondary">Return Requested</Badge></TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Button size="sm" onClick={() => confirmReturn(o)}>Confirm Return</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
       <TabsContent value="history">
         <Card>
           <CardHeader>

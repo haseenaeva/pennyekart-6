@@ -23,9 +23,10 @@ interface Order {
   shipping_address: string | null;
 }
 
-const statusSteps = ["pending", "confirmed", "packed", "shipped", "delivered"];
+const statusSteps = ["pending", "accepted", "confirmed", "packed", "shipped", "delivered"];
 const statusIcons: Record<string, any> = {
   pending: Clock,
+  accepted: CheckCircle,
   confirmed: CheckCircle,
   packed: Package,
   shipped: Truck,
@@ -36,6 +37,7 @@ const statusIcons: Record<string, any> = {
 };
 const statusLabels: Record<string, string> = {
   pending: "Pending",
+  accepted: "Accepted",
   confirmed: "Confirmed",
   packed: "Packed",
   shipped: "Shipped",
@@ -87,7 +89,7 @@ const Profile = () => {
   const activeOrders = orders.filter(o => !["delivered", "cancelled", "return_requested", "return_confirmed"].includes(o.status));
   const pastOrders = orders.filter(o => ["delivered", "cancelled", "return_requested", "return_confirmed"].includes(o.status));
 
-  const canCancel = (status: string) => ["pending", "confirmed", "packed"].includes(status);
+  const canCancel = (status: string) => ["pending", "accepted", "confirmed", "packed", "shipped"].includes(status);
   const canRequestReturn = (status: string) => status === "delivered";
 
   const handleCancelOrder = async (orderId: string) => {

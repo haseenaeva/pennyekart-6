@@ -111,7 +111,7 @@ const FlashSaleBanner = () => {
           key={sale.id}
           className="relative overflow-hidden cursor-pointer"
           style={{ background: `linear-gradient(135deg, ${sale.banner_color}, ${sale.banner_color}dd, ${sale.banner_color}99)` }}
-          onClick={() => navigate(`/product/${sale.id}`)}
+          onClick={() => navigate(`/flash-sale/${sale.id}`)}
         >
           {/* Animated background effects */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">

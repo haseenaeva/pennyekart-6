@@ -53,7 +53,7 @@ const FlashSaleManager = () => {
   const [addProductSaleId, setAddProductSaleId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [allProducts, setAllProducts] = useState<ProductOption[]>([]);
-  const [form, setForm] = useState({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "" });
+  const [form, setForm] = useState({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "", discount_type: "percentage", discount_value: "" });
   const { toast } = useToast();
   const { hasPermission } = usePermissions();
   const canEdit = hasPermission("update_products");
@@ -110,11 +110,13 @@ const FlashSaleManager = () => {
       banner_color: form.banner_color,
       start_time: new Date(form.start_time).toISOString(),
       end_time: new Date(form.end_time).toISOString(),
+      discount_type: form.discount_type,
+      discount_value: parseFloat(form.discount_value) || 0,
     });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Flash Sale created!" });
     setShowCreate(false);
-    setForm({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "" });
+    setForm({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "", discount_type: "percentage", discount_value: "" });
     fetchSales();
   };
 
@@ -138,6 +140,8 @@ const FlashSaleManager = () => {
       banner_color: sale.banner_color || "#ef4444",
       start_time: new Date(sale.start_time).toISOString().slice(0, 16),
       end_time: new Date(sale.end_time).toISOString().slice(0, 16),
+      discount_type: (sale as any).discount_type || "percentage",
+      discount_value: String((sale as any).discount_value || ""),
     });
   };
 
@@ -152,11 +156,13 @@ const FlashSaleManager = () => {
       banner_color: form.banner_color,
       start_time: new Date(form.start_time).toISOString(),
       end_time: new Date(form.end_time).toISOString(),
+      discount_type: form.discount_type,
+      discount_value: parseFloat(form.discount_value) || 0,
     }).eq("id", editingSale.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Flash Sale updated!" });
     setEditingSale(null);
-    setForm({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "" });
+    setForm({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "", discount_type: "percentage", discount_value: "" });
     fetchSales();
   };
 
@@ -313,6 +319,19 @@ const FlashSaleManager = () => {
                 <Input type="datetime-local" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
               </div>
             </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <Label>Discount Type</Label>
+                <select value={form.discount_type} onChange={e => setForm(f => ({ ...f, discount_type: e.target.value }))} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="amount">Amount (₹)</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <Label>Discount Value</Label>
+                <Input type="number" value={form.discount_value} onChange={e => setForm(f => ({ ...f, discount_value: e.target.value }))} placeholder={form.discount_type === "percentage" ? "e.g. 20" : "e.g. 50"} />
+              </div>
+            </div>
             <div>
               <Label>Banner Color</Label>
               <div className="flex items-center gap-2">
@@ -326,7 +345,7 @@ const FlashSaleManager = () => {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingSale} onOpenChange={v => { if (!v) { setEditingSale(null); setForm({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "" }); } }}>
+      <Dialog open={!!editingSale} onOpenChange={v => { if (!v) { setEditingSale(null); setForm({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "", discount_type: "percentage", discount_value: "" }); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Edit Flash Sale</DialogTitle></DialogHeader>
           <div className="space-y-3">
@@ -346,6 +365,19 @@ const FlashSaleManager = () => {
               <div className="flex-1">
                 <Label>End Date & Time *</Label>
                 <Input type="datetime-local" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <Label>Discount Type</Label>
+                <select value={form.discount_type} onChange={e => setForm(f => ({ ...f, discount_type: e.target.value }))} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="amount">Amount (₹)</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <Label>Discount Value</Label>
+                <Input type="number" value={form.discount_value} onChange={e => setForm(f => ({ ...f, discount_value: e.target.value }))} placeholder={form.discount_type === "percentage" ? "e.g. 20" : "e.g. 50"} />
               </div>
             </div>
             <div>

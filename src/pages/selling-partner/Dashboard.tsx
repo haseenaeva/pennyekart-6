@@ -737,29 +737,34 @@ const SellingPartnerDashboard = () => {
                                 <TableCell>₹{o.total}</TableCell>
                                 <TableCell className="text-sm text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</TableCell>
                                 <TableCell>
-                                  {/* Self Delivery button for seller_accepted orders not yet marked */}
-                                  {o.status === "seller_accepted" && !isSelfDelivery && (
-                                    <Button size="sm" variant="outline" onClick={async () => {
-                                      const { error } = await supabase.from("orders").update({ is_self_delivery: true } as any).eq("id", o.id);
-                                      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-                                      else { toast({ title: "Marked as Self Delivery!" }); fetchOrders(products); }
-                                    }}>
-                                      <Truck className="h-3.5 w-3.5 mr-1" /> Self Deliver
+                                  <div className="flex items-center gap-1 flex-wrap">
+                                    <Button size="sm" variant="ghost" onClick={() => setDetailOrder(o as any)}>
+                                      <Eye className="h-4 w-4" />
                                     </Button>
-                                  )}
-                                  {/* Progress self-delivery status */}
-                                  {isSelfDelivery && selfDeliveryNextStatus && (
-                                    <Button size="sm" onClick={async () => {
-                                      const { error } = await supabase.from("orders").update({ status: selfDeliveryNextStatus } as any).eq("id", o.id);
-                                      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-                                      else { toast({ title: `Order ${selfDeliveryNextStatus.replace(/_/g, " ")}` }); fetchOrders(products); }
-                                    }}>
-                                      {selfDeliveryLabel}
-                                    </Button>
-                                  )}
-                                  {o.status === "delivered" && isSelfDelivery && (
-                                    <span className="text-xs text-muted-foreground">Self Delivered ✓</span>
-                                  )}
+                                    {/* Self Delivery button for seller_accepted orders not yet marked */}
+                                    {o.status === "seller_accepted" && !isSelfDelivery && (
+                                      <Button size="sm" variant="outline" onClick={async () => {
+                                        const { error } = await supabase.from("orders").update({ is_self_delivery: true } as any).eq("id", o.id);
+                                        if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+                                        else { toast({ title: "Marked as Self Delivery!" }); fetchOrders(products); }
+                                      }}>
+                                        <Truck className="h-3.5 w-3.5 mr-1" /> Self Deliver
+                                      </Button>
+                                    )}
+                                    {/* Progress self-delivery status */}
+                                    {isSelfDelivery && selfDeliveryNextStatus && (
+                                      <Button size="sm" onClick={async () => {
+                                        const { error } = await supabase.from("orders").update({ status: selfDeliveryNextStatus } as any).eq("id", o.id);
+                                        if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+                                        else { toast({ title: `Order ${selfDeliveryNextStatus.replace(/_/g, " ")}` }); fetchOrders(products); }
+                                      }}>
+                                        {selfDeliveryLabel}
+                                      </Button>
+                                    )}
+                                    {o.status === "delivered" && isSelfDelivery && (
+                                      <span className="text-xs text-muted-foreground">Self Delivered ✓</span>
+                                    )}
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             );

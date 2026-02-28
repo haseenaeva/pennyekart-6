@@ -28,8 +28,11 @@ interface Product {
 interface SellerProduct {
   id: string;
   name: string;
+  description: string | null;
   price: number;
   mrp: number;
+  purchase_rate: number;
+  discount_rate: number;
   stock: number;
   is_active: boolean;
   is_approved: boolean;
@@ -37,6 +40,9 @@ interface SellerProduct {
   coming_soon: boolean;
   category: string | null;
   image_url: string | null;
+  image_url_2: string | null;
+  image_url_3: string | null;
+  video_url: string | null;
   seller_id: string;
   created_at: string;
 }
@@ -63,6 +69,9 @@ const ProductsPage = () => {
   const [form, setForm] = useState(emptyProduct);
   const [editId, setEditId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [sellerEditOpen, setSellerEditOpen] = useState(false);
+  const [sellerEditId, setSellerEditId] = useState<string | null>(null);
+  const [sellerForm, setSellerForm] = useState({ name: "", description: "", price: 0, mrp: 0, purchase_rate: 0, discount_rate: 0, stock: 0, category: "", is_active: true, is_approved: false, is_featured: false, coming_soon: false, image_url: "", image_url_2: "", image_url_3: "", video_url: "" });
   const { hasPermission } = usePermissions();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -76,7 +85,7 @@ const ProductsPage = () => {
   const fetchSellerProducts = async () => {
     const { data } = await supabase
       .from("seller_products")
-      .select("id, name, price, mrp, stock, is_active, is_approved, is_featured, coming_soon, category, image_url, seller_id, created_at")
+      .select("*")
       .order("created_at", { ascending: false });
     setSellerProducts((data as SellerProduct[]) ?? []);
   };
@@ -129,6 +138,36 @@ const ProductsPage = () => {
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: newVal ? "Marked as Coming Soon" : "Coming Soon removed" });
     fetchSellerProducts();
+  };
+
+  const openSellerEdit = (p: SellerProduct) => {
+    setSellerForm({
+      name: p.name, description: p.description ?? "", price: p.price, mrp: p.mrp,
+      purchase_rate: p.purchase_rate, discount_rate: p.discount_rate, stock: p.stock,
+      category: p.category ?? "", is_active: p.is_active, is_approved: p.is_approved,
+      is_featured: p.is_featured, coming_soon: p.coming_soon,
+      image_url: p.image_url ?? "", image_url_2: p.image_url_2 ?? "",
+      image_url_3: p.image_url_3 ?? "", video_url: p.video_url ?? "",
+    });
+    setSellerEditId(p.id);
+    setSellerEditOpen(true);
+  };
+
+  const handleSellerSave = async () => {
+    if (!sellerEditId) return;
+    const { error } = await supabase.from("seller_products").update({
+      name: sellerForm.name, description: sellerForm.description || null,
+      price: sellerForm.price, mrp: sellerForm.mrp, purchase_rate: sellerForm.purchase_rate,
+      discount_rate: sellerForm.discount_rate, stock: sellerForm.stock,
+      category: sellerForm.category || null, is_active: sellerForm.is_active,
+      is_approved: sellerForm.is_approved, is_featured: sellerForm.is_featured,
+      coming_soon: sellerForm.coming_soon, image_url: sellerForm.image_url || null,
+      image_url_2: sellerForm.image_url_2 || null, image_url_3: sellerForm.image_url_3 || null,
+      video_url: sellerForm.video_url || null,
+    }).eq("id", sellerEditId);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Seller product updated" });
+    setSellerEditOpen(false); setSellerEditId(null); fetchSellerProducts();
   };
 
   const openEdit = (p: Product) => {
@@ -354,13 +393,18 @@ const ProductsPage = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant={p.is_approved ? "outline" : "default"}
-                        size="sm"
-                        onClick={() => toggleSellerApproval(p)}
-                      >
-                        {p.is_approved ? "Revoke" : "Approve"}
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => openSellerEdit(p)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant={p.is_approved ? "outline" : "default"}
+                          size="sm"
+                          onClick={() => toggleSellerApproval(p)}
+                        >
+                          {p.is_approved ? "Revoke" : "Approve"}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -372,6 +416,57 @@ const ProductsPage = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Seller Product Edit Dialog */}
+      <Dialog open={sellerEditOpen} onOpenChange={(v) => { setSellerEditOpen(v); if (!v) setSellerEditId(null); }}>
+        <DialogContent className="max-h-[85vh] flex flex-col">
+          <DialogHeader><DialogTitle>Edit Seller Product</DialogTitle></DialogHeader>
+          <div className="space-y-3 overflow-y-auto pr-2 flex-1">
+            <div><Label>Name</Label><Input value={sellerForm.name} onChange={(e) => setSellerForm({ ...sellerForm, name: e.target.value })} /></div>
+            <div><Label>Description</Label><Input value={sellerForm.description} onChange={(e) => setSellerForm({ ...sellerForm, description: e.target.value })} /></div>
+            <div className="grid grid-cols-3 gap-3">
+              <div><Label>Purchase Rate</Label><Input type="number" value={sellerForm.purchase_rate} onChange={(e) => setSellerForm({ ...sellerForm, purchase_rate: +e.target.value })} /></div>
+              <div><Label>MRP</Label><Input type="number" value={sellerForm.mrp} onChange={(e) => { const m = +e.target.value; setSellerForm({ ...sellerForm, mrp: m, price: m - sellerForm.discount_rate }); }} /></div>
+              <div><Label>Discount Rate</Label><Input type="number" value={sellerForm.discount_rate} onChange={(e) => { const dr = +e.target.value; setSellerForm({ ...sellerForm, discount_rate: dr, price: sellerForm.mrp - dr }); }} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Selling Price</Label><Input type="number" value={sellerForm.price} onChange={(e) => setSellerForm({ ...sellerForm, price: +e.target.value })} /></div>
+              <div><Label>Stock</Label><Input type="number" value={sellerForm.stock} onChange={(e) => setSellerForm({ ...sellerForm, stock: +e.target.value })} /></div>
+            </div>
+            <div>
+              <Label>Category</Label>
+              <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={sellerForm.category} onChange={(e) => setSellerForm({ ...sellerForm, category: e.target.value })}>
+                <option value="">Select category</option>
+                {categories.filter(c => c.category_type === "grocery").length > 0 && (
+                  <optgroup label="Grocery & Essentials">
+                    {categories.filter(c => c.category_type === "grocery").map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+                {categories.filter(c => c.category_type !== "grocery").length > 0 && (
+                  <optgroup label="General Categories">
+                    {categories.filter(c => c.category_type !== "grocery").map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+            <ImageUpload bucket="products" value={sellerForm.image_url} onChange={(url) => setSellerForm({ ...sellerForm, image_url: url })} label="Image 1 (Main)" />
+            <ImageUpload bucket="products" value={sellerForm.image_url_2} onChange={(url) => setSellerForm({ ...sellerForm, image_url_2: url })} label="Image 2" />
+            <ImageUpload bucket="products" value={sellerForm.image_url_3} onChange={(url) => setSellerForm({ ...sellerForm, image_url_3: url })} label="Image 3" />
+            <div><Label>Video URL (YouTube)</Label><Input value={sellerForm.video_url} onChange={(e) => setSellerForm({ ...sellerForm, video_url: e.target.value })} placeholder="https://youtube.com/watch?v=..." /></div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2"><Switch checked={sellerForm.is_active} onCheckedChange={(v) => setSellerForm({ ...sellerForm, is_active: v })} /><Label>Active</Label></div>
+              <div className="flex items-center gap-2"><Switch checked={sellerForm.is_approved} onCheckedChange={(v) => setSellerForm({ ...sellerForm, is_approved: v })} /><Label>Approved</Label></div>
+              <div className="flex items-center gap-2"><Switch checked={sellerForm.is_featured} onCheckedChange={(v) => setSellerForm({ ...sellerForm, is_featured: v })} /><Label>Featured</Label></div>
+              <div className="flex items-center gap-2"><Switch checked={sellerForm.coming_soon} onCheckedChange={(v) => setSellerForm({ ...sellerForm, coming_soon: v })} /><Label>Coming Soon</Label></div>
+            </div>
+            <Button className="w-full" onClick={handleSellerSave}>Save Changes</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

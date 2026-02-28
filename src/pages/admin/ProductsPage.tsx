@@ -140,6 +140,13 @@ const ProductsPage = () => {
     fetchSellerProducts();
   };
 
+  const handleSellerDelete = async (id: string) => {
+    const { error } = await supabase.from("seller_products").delete().eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Seller product deleted" });
+    fetchSellerProducts();
+  };
+
   const openSellerEdit = (p: SellerProduct) => {
     setSellerForm({
       name: p.name, description: p.description ?? "", price: p.price, mrp: p.mrp,
@@ -396,6 +403,9 @@ const ProductsPage = () => {
                       <div className="flex gap-1">
                         <Button variant="ghost" size="sm" onClick={() => openSellerEdit(p)}>
                           <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleSellerDelete(p.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant={p.is_approved ? "outline" : "default"}

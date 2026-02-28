@@ -311,6 +311,8 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
         </Card>
       </TabsContent>
     </Tabs>
+    <OrderDetailDialog order={detailOrder} open={!!detailOrder} onOpenChange={(v) => { if (!v) setDetailOrder(null); }} />
+    </>
   );
 };
 

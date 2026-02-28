@@ -56,15 +56,51 @@ const WalletManagementPage = () => {
   const [minWallet, setMinWallet] = useState<WalletRow | null>(null);
   const [minAmount, setMinAmount] = useState("");
 
+  // Global wallet rule
+  const [globalMinUsage, setGlobalMinUsage] = useState("");
+  const [globalRuleLoading, setGlobalRuleLoading] = useState(false);
+
   // Transaction history
   const [histOpen, setHistOpen] = useState(false);
   const [histWallet, setHistWallet] = useState<WalletRow | null>(null);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [histLoading, setHistLoading] = useState(false);
 
+  const fetchGlobalRule = async () => {
+    const { data } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "wallet_min_usage_amount")
+      .maybeSingle();
+    setGlobalMinUsage(data?.value ?? "100");
+  };
+
+  const saveGlobalRule = async () => {
+    setGlobalRuleLoading(true);
+    // Upsert the app_settings row
+    const { data: existing } = await supabase
+      .from("app_settings")
+      .select("id")
+      .eq("key", "wallet_min_usage_amount")
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from("app_settings").update({ value: globalMinUsage, updated_by: user?.id } as any).eq("id", existing.id);
+    } else {
+      await supabase.from("app_settings").insert({ key: "wallet_min_usage_amount", value: globalMinUsage, description: "Minimum order amount for customer wallet usage", updated_by: user?.id } as any);
+    }
+
+    // Also update all customer wallets with this value
+    await supabase.from("customer_wallets").update({ min_usage_amount: Number(globalMinUsage) } as any).neq("id", "00000000-0000-0000-0000-000000000000");
+
+    toast({ title: "Global wallet rule saved & applied to all customers" });
+    setGlobalRuleLoading(false);
+    fetchAll();
+  };
+
   const fetchAll = async () => {
     setLoading(true);
-    await Promise.all([fetchCustomerWallets(), fetchSellerWallets(), fetchDeliveryWallets()]);
+    await Promise.all([fetchCustomerWallets(), fetchSellerWallets(), fetchDeliveryWallets(), fetchGlobalRule()]);
     setLoading(false);
   };
 
@@ -237,6 +273,27 @@ const WalletManagementPage = () => {
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
           </Button>
         </div>
+
+        {/* Global Wallet Rule */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2"><Settings className="h-4 w-4" /> Common Customer Wallet Rule</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-3">
+              Set a global minimum order amount required for customers to use their wallet balance during checkout. This rule applies to all customer wallets.
+            </p>
+            <div className="flex items-end gap-3">
+              <div className="flex-1 max-w-xs">
+                <Label className="text-xs">Minimum Order Amount (₹)</Label>
+                <Input type="number" min="0" value={globalMinUsage} onChange={(e) => setGlobalMinUsage(e.target.value)} placeholder="100" />
+              </div>
+              <Button onClick={saveGlobalRule} disabled={globalRuleLoading} size="sm">
+                {globalRuleLoading ? "Saving..." : "Save & Apply to All"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Summary cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

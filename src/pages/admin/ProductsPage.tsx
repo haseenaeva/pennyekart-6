@@ -72,6 +72,8 @@ const ProductsPage = () => {
   const [sellerEditOpen, setSellerEditOpen] = useState(false);
   const [sellerEditId, setSellerEditId] = useState<string | null>(null);
   const [sellerForm, setSellerForm] = useState({ name: "", description: "", price: 0, mrp: 0, purchase_rate: 0, discount_rate: 0, stock: 0, category: "", is_active: true, is_approved: false, is_featured: false, coming_soon: false, image_url: "", image_url_2: "", image_url_3: "", video_url: "" });
+  const [ownCategoryFilter, setOwnCategoryFilter] = useState("");
+  const [sellerCategoryFilter, setSellerCategoryFilter] = useState("");
   const { hasPermission } = usePermissions();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -277,8 +279,12 @@ const ProductsPage = () => {
 
         {/* OWN PRODUCTS TAB */}
         <TabsContent value="own">
-          <div className="mb-4 flex justify-end">
-            {hasPermission("create_products") && productDialog}
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <select className="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm" value={ownCategoryFilter} onChange={(e) => setOwnCategoryFilter(e.target.value)}>
+              <option value="">All Categories</option>
+              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+            <div>{hasPermission("create_products") && productDialog}</div>
           </div>
           <div className="admin-table-wrap">
             <Table>
@@ -296,7 +302,7 @@ const ProductsPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((p) => (
+                {products.filter(p => !ownCategoryFilter || p.category === ownCategoryFilter).map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell>₹{p.purchase_rate}</TableCell>
@@ -341,8 +347,14 @@ const ProductsPage = () => {
 
         {/* SELLER PRODUCTS TAB */}
         <TabsContent value="sellers">
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Products submitted by selling partners. Approve them to make visible to customers.</p>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <select className="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm" value={sellerCategoryFilter} onChange={(e) => setSellerCategoryFilter(e.target.value)}>
+                <option value="">All Categories</option>
+                {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
+              <p className="text-sm text-muted-foreground hidden sm:block">Approve to make visible to customers.</p>
+            </div>
             <Button variant="outline" onClick={() => navigate("/selling-partner/dashboard")}>
               <Store className="mr-2 h-4 w-4" /> Seller Dashboard
               <ExternalLink className="ml-1 h-3.5 w-3.5" />
@@ -365,7 +377,7 @@ const ProductsPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sellerProducts.map((p) => (
+                {sellerProducts.filter(p => !sellerCategoryFilter || p.category === sellerCategoryFilter).map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell>{p.category ?? "—"}</TableCell>

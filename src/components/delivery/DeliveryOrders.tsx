@@ -34,6 +34,7 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
   const { toast } = useToast();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
 
   // Separate orders by godown type
   const isAreaGodownOrder = (o: Order) => 

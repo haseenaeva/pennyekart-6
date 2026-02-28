@@ -1,0 +1,120 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Package, MapPin, Calendar, User } from "lucide-react";
+
+interface OrderItem {
+  id?: string;
+  name?: string;
+  quantity?: number;
+  price?: number;
+  mrp?: number;
+  image_url?: string;
+}
+
+interface Order {
+  id: string;
+  status: string;
+  total: number;
+  shipping_address?: string | null;
+  created_at: string;
+  items: any;
+  user_id?: string | null;
+  seller_id?: string | null;
+}
+
+interface Props {
+  order: Order | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  statusLabel?: (status: string) => string;
+}
+
+const defaultStatusLabel = (s: string) => s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+const OrderDetailDialog = ({ order, open, onOpenChange, statusLabel = defaultStatusLabel }: Props) => {
+  if (!order) return null;
+
+  const items: OrderItem[] = Array.isArray(order.items) ? order.items : [];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-primary" />
+            Order #{order.id.slice(0, 8)}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Status & Date */}
+          <div className="flex items-center justify-between">
+            <Badge variant={order.status === "delivered" ? "default" : "secondary"}>
+              {statusLabel(order.status)}
+            </Badge>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {new Date(order.created_at).toLocaleString()}
+            </span>
+          </div>
+
+          {/* Address */}
+          {order.shipping_address && (
+            <div className="flex items-start gap-2 text-sm">
+              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+              <span className="text-muted-foreground">{order.shipping_address}</span>
+            </div>
+          )}
+
+          <Separator />
+
+          {/* Items */}
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Items ({items.length})</h4>
+            <div className="space-y-2">
+              {items.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No item details available</p>
+              ) : (
+                items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 rounded-lg border p-2">
+                    {item.image_url && (
+                      <img
+                        src={item.image_url}
+                        alt={item.name || "Product"}
+                        className="h-12 w-12 rounded-md border object-cover shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.name || item.id?.slice(0, 8) || "Unknown"}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Qty: {item.quantity || 1}</span>
+                        {item.price != null && <span>₹{item.price}</span>}
+                        {item.mrp != null && item.mrp !== item.price && (
+                          <span className="line-through">₹{item.mrp}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-sm font-semibold shrink-0">
+                      ₹{((item.price ?? 0) * (item.quantity || 1)).toFixed(0)}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Total */}
+          <div className="flex items-center justify-between font-semibold">
+            <span>Total</span>
+            <span className="text-lg">₹{order.total}</span>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default OrderDetailDialog;

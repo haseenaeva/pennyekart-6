@@ -26,18 +26,20 @@ const Cart = () => {
   const [useWallet, setUseWallet] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletId, setWalletId] = useState<string | null>(null);
+  const [walletMinUsage, setWalletMinUsage] = useState(0);
 
   useEffect(() => {
     if (user) {
       supabase
         .from("customer_wallets")
-        .select("id, balance")
+        .select("id, balance, min_usage_amount")
         .eq("customer_user_id", user.id)
         .maybeSingle()
         .then(({ data }) => {
           if (data) {
             setWalletBalance(data.balance);
             setWalletId(data.id);
+            setWalletMinUsage(data.min_usage_amount);
           }
         });
     }
@@ -47,7 +49,9 @@ const Cart = () => {
   const totalDiscount = totalMrp - totalPrice;
   const platformFee = items.length > 0 ? 7 : 0;
   const couponDiscount = appliedCoupon?.discount ?? 0;
-  const walletDeduction = useWallet ? Math.min(walletBalance, totalPrice + platformFee - couponDiscount) : 0;
+  const orderSubtotal = totalPrice + platformFee - couponDiscount;
+  const canUseWallet = walletBalance > 0 && orderSubtotal >= walletMinUsage;
+  const walletDeduction = useWallet && canUseWallet ? Math.min(walletBalance, orderSubtotal) : 0;
   const finalAmount = totalPrice + platformFee - couponDiscount - walletDeduction;
   const hasComingSoonItems = items.some(i => i.coming_soon);
 
@@ -303,6 +307,21 @@ const Cart = () => {
         });
       }
 
+      // Deduct wallet balance if used
+      if (useWallet && walletDeduction > 0 && walletId && user) {
+        const newBalance = walletBalance - walletDeduction;
+        await supabase.from("customer_wallets").update({ balance: newBalance } as any).eq("id", walletId);
+        await supabase.from("customer_wallet_transactions").insert({
+          wallet_id: walletId,
+          customer_user_id: user.id,
+          type: "debit",
+          amount: walletDeduction,
+          description: `Order payment - wallet deduction`,
+          order_id: firstOrderId,
+        } as any);
+        setWalletBalance(newBalance);
+      }
+
       clearCart();
       setShowPayment(false);
       const orderCount = ordersToInsert.length;
@@ -465,13 +484,26 @@ const Cart = () => {
                   <input
                     type="checkbox"
                     checked={useWallet}
-                    onChange={(e) => setUseWallet(e.target.checked)}
-                    disabled={walletBalance <= 0}
+                    onChange={(e) => {
+                      if (e.target.checked && !canUseWallet) {
+                        if (walletBalance <= 0) {
+                          toast.error("No wallet balance available");
+                        } else {
+                          toast.error(`Minimum order amount ₹${walletMinUsage} required to use wallet`);
+                        }
+                        return;
+                      }
+                      setUseWallet(e.target.checked);
+                    }}
+                    disabled={!canUseWallet}
                     className="h-4 w-4 rounded border-border text-primary accent-primary"
                   />
                   <span className="text-sm text-foreground">Use Wallet</span>
                 </label>
               </div>
+              {!canUseWallet && walletBalance > 0 && walletMinUsage > 0 && (
+                <p className="mt-1.5 text-xs text-warning">Min order ₹{walletMinUsage} required to use wallet</p>
+              )}
               {useWallet && walletDeduction > 0 && (
                 <p className="mt-1.5 text-xs text-secondary">₹{walletDeduction.toFixed(2)} will be deducted from wallet</p>
               )}

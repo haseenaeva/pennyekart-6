@@ -678,6 +678,7 @@ const SellingPartnerDashboard = () => {
                                       }}>
                                         Accept Order
                                       </Button>
+                                      </div>
                                     </TableCell>
                                   </TableRow>
                                 );

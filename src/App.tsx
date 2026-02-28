@@ -49,6 +49,7 @@ import SellingPartnerDashboard from "./pages/selling-partner/Dashboard";
 import CustomerSignup from "./pages/customer/Signup";
 import CustomerLogin from "./pages/customer/Login";
 import ProductDetail from "./pages/customer/ProductDetail";
+import FlashSaleDetail from "./pages/customer/FlashSaleDetail";
 import Cart from "./pages/customer/Cart";
 import CustomerProfile from "./pages/customer/Profile";
 import CustomerWallet from "./pages/customer/Wallet";
@@ -99,6 +100,7 @@ const AppRoutes = () => {
 
       {/* Customer */}
       <Route path="/product/:id" element={<ProductDetail />} />
+      <Route path="/flash-sale/:id" element={<FlashSaleDetail />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/customer/signup" element={<CustomerSignup />} />
       <Route path="/customer/login" element={<CustomerLogin />} />

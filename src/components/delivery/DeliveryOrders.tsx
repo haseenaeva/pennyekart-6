@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Truck, History, Warehouse, Store, RotateCcw } from "lucide-react";
+import { Truck, History, Warehouse, Store, RotateCcw, Eye } from "lucide-react";
+import OrderDetailDialog from "@/components/OrderDetailDialog";
 
 interface Order {
   id: string;
@@ -33,6 +34,7 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
   const { toast } = useToast();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
 
   // Separate orders by godown type
   const isAreaGodownOrder = (o: Order) => 
@@ -164,12 +166,13 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
             <TableHead>Address</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Date</TableHead>
+            <TableHead>View</TableHead>
             {showAction && <TableHead>Action</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.length === 0 ? (
-            <TableRow><TableCell colSpan={showAction ? 6 : 5} className="text-center text-muted-foreground">No orders</TableCell></TableRow>
+            <TableRow><TableCell colSpan={showAction ? 7 : 6} className="text-center text-muted-foreground">No orders</TableCell></TableRow>
           ) : items.map((o) => {
             return (
               <TableRow key={o.id}>
@@ -183,11 +186,15 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
                   </div>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <Button size="sm" variant="ghost" onClick={() => setDetailOrder(o)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
                 {showAction && (
                   <TableCell>
                     {(() => {
                       const next = getNextStatus(o.status, o);
-                      // Delivery staff shouldn't advance seller_confirmation_pending orders
                       if (o.status === "seller_confirmation_pending") {
                         return <span className="text-xs text-muted-foreground">Awaiting seller</span>;
                       }
@@ -211,6 +218,7 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
   );
 
   return (
+    <>
     <Tabs defaultValue="micro">
       <TabsList className="w-full grid grid-cols-4">
         <TabsTrigger value="micro"><Warehouse className="h-4 w-4 mr-1" /> Micro ({activeMicro.length})</TabsTrigger>
@@ -304,6 +312,8 @@ const DeliveryOrders = ({ orders, userId, onRefresh }: Props) => {
         </Card>
       </TabsContent>
     </Tabs>
+    <OrderDetailDialog order={detailOrder} open={!!detailOrder} onOpenChange={(v) => { if (!v) setDetailOrder(null); }} />
+    </>
   );
 };
 

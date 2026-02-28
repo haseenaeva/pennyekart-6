@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Package } from "lucide-react";
+import { Bell, Package, Eye } from "lucide-react";
+import OrderDetailDialog from "@/components/OrderDetailDialog";
 
 interface PendingOrder {
   id: string;
@@ -28,6 +29,7 @@ const NewOrderNotification = ({ userId, role, onAccept, onRefresh }: Props) => {
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const [open, setOpen] = useState(false);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [detailOrder, setDetailOrder] = useState<PendingOrder | null>(null);
   const prevCountRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -168,15 +170,32 @@ const NewOrderNotification = ({ userId, role, onAccept, onRefresh }: Props) => {
                 <p className="text-xs text-muted-foreground">
                   {new Date(order.created_at).toLocaleString()}
                 </p>
+                {/* Item details */}
                 {Array.isArray(order.items) && order.items.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {order.items.length} item(s): {order.items.map((i: any) => i.name || i.id?.slice(0, 6)).join(", ")}
-                  </p>
+                  <div className="space-y-1 border-t pt-2">
+                    {order.items.slice(0, 4).map((item: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        {item.image_url && (
+                          <img src={item.image_url} alt={item.name} className="h-8 w-8 rounded border object-cover shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{item.name || item.id?.slice(0, 8)}</p>
+                          <p className="text-[10px] text-muted-foreground">Qty: {item.quantity || 1} · ₹{item.price ?? 0}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {order.items.length > 4 && (
+                      <p className="text-[10px] text-muted-foreground">+{order.items.length - 4} more items</p>
+                    )}
+                  </div>
                 )}
                 {!dismissedIds.has(order.id) && (
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" className="flex-1" onClick={() => handleAccept(order.id)}>
                       Accept Order
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setDetailOrder(order)}>
+                      <Eye className="h-3.5 w-3.5" />
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleDismiss(order.id)}>
                       Later
@@ -188,6 +207,7 @@ const NewOrderNotification = ({ userId, role, onAccept, onRefresh }: Props) => {
           </div>
         </DialogContent>
       </Dialog>
+      <OrderDetailDialog order={detailOrder} open={!!detailOrder} onOpenChange={(v) => { if (!v) setDetailOrder(null); }} />
     </>
   );
 };

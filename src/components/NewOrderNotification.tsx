@@ -29,6 +29,7 @@ const NewOrderNotification = ({ userId, role, onAccept, onRefresh }: Props) => {
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const [open, setOpen] = useState(false);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [detailOrder, setDetailOrder] = useState<PendingOrder | null>(null);
   const prevCountRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 

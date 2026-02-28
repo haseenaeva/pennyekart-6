@@ -999,6 +999,12 @@ const SellingPartnerDashboard = () => {
           }}
         />
       )}
+      <OrderDetailDialog
+        order={detailOrder}
+        open={!!detailOrder}
+        onOpenChange={(v) => { if (!v) setDetailOrder(null); }}
+        statusLabel={(s) => STATUS_LABELS[s] || s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+      />
     </div>
   );
 };

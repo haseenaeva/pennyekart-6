@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Zap, Plus, Trash2, Clock, Package, Search } from "lucide-react";
+import { Zap, Plus, Trash2, Clock, Package, Search, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
@@ -49,6 +49,7 @@ const FlashSaleManager = () => {
   const [sales, setSales] = useState<FlashSale[]>([]);
   const [saleProducts, setSaleProducts] = useState<Record<string, FlashSaleProduct[]>>({});
   const [showCreate, setShowCreate] = useState(false);
+  const [editingSale, setEditingSale] = useState<FlashSale | null>(null);
   const [addProductSaleId, setAddProductSaleId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [allProducts, setAllProducts] = useState<ProductOption[]>([]);
@@ -118,6 +119,7 @@ const FlashSaleManager = () => {
   };
 
   const handleDelete = async (id: string) => {
+    await supabase.from("flash_sale_products").delete().eq("flash_sale_id", id);
     await supabase.from("flash_sales").delete().eq("id", id);
     toast({ title: "Flash Sale deleted" });
     fetchSales();
@@ -125,6 +127,36 @@ const FlashSaleManager = () => {
 
   const handleToggle = async (id: string, active: boolean) => {
     await supabase.from("flash_sales").update({ is_active: !active }).eq("id", id);
+    fetchSales();
+  };
+
+  const openEdit = (sale: FlashSale) => {
+    setEditingSale(sale);
+    setForm({
+      title: sale.title,
+      description: sale.description || "",
+      banner_color: sale.banner_color || "#ef4444",
+      start_time: new Date(sale.start_time).toISOString().slice(0, 16),
+      end_time: new Date(sale.end_time).toISOString().slice(0, 16),
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingSale || !form.title || !form.start_time || !form.end_time) {
+      toast({ title: "Fill all required fields", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("flash_sales").update({
+      title: form.title,
+      description: form.description || null,
+      banner_color: form.banner_color,
+      start_time: new Date(form.start_time).toISOString(),
+      end_time: new Date(form.end_time).toISOString(),
+    }).eq("id", editingSale.id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Flash Sale updated!" });
+    setEditingSale(null);
+    setForm({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "" });
     fetchSales();
   };
 
@@ -205,6 +237,9 @@ const FlashSaleManager = () => {
                     <>
                       <Button size="sm" variant="outline" onClick={() => openAddProduct(sale.id)}>
                         <Plus className="h-3 w-3 mr-1" /> Add
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => openEdit(sale)}>
+                        <Pencil className="h-3 w-3 mr-1" /> Edit
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => handleToggle(sale.id, sale.is_active)}>
                         {sale.is_active ? "Deactivate" : "Activate"}
@@ -290,7 +325,41 @@ const FlashSaleManager = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Product Dialog */}
+      {/* Edit Dialog */}
+      <Dialog open={!!editingSale} onOpenChange={v => { if (!v) { setEditingSale(null); setForm({ title: "", description: "", banner_color: "#ef4444", start_time: "", end_time: "" }); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Flash Sale</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Title *</Label>
+              <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Super Flash Sale!" />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Limited time offer..." />
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <Label>Start Date & Time *</Label>
+                <Input type="datetime-local" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} />
+              </div>
+              <div className="flex-1">
+                <Label>End Date & Time *</Label>
+                <Input type="datetime-local" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label>Banner Color</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={form.banner_color} onChange={e => setForm(f => ({ ...f, banner_color: e.target.value }))} className="h-9 w-12 rounded cursor-pointer" />
+                <Input value={form.banner_color} onChange={e => setForm(f => ({ ...f, banner_color: e.target.value }))} className="w-28" />
+              </div>
+            </div>
+            <Button onClick={handleUpdate} className="w-full">Update Flash Sale</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!addProductSaleId} onOpenChange={v => { if (!v) setAddProductSaleId(null); }}>
         <DialogContent className="max-h-[80vh] flex flex-col">
           <DialogHeader><DialogTitle>Add Products to Flash Sale</DialogTitle></DialogHeader>

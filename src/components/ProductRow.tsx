@@ -51,7 +51,12 @@ const ProductRow = ({ title, products, linkPrefix = "/product/", sectionKey }: P
             )}
             <h2 className="font-heading text-lg font-bold text-foreground md:text-xl">{title}</h2>
           </div>
-          <button className="text-sm font-semibold text-primary hover:underline">View All</button>
+          <button
+            onClick={() => navigate(`/category/${encodeURIComponent(title)}`)}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            View All
+          </button>
         </div>
 
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">

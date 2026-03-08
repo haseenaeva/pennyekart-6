@@ -242,6 +242,7 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
         c.mobile_number ?? "",
         classifyCustomer(c),
         c.created_at ? format(new Date(c.created_at), "dd MMM yyyy") : "",
+        c.last_login_at ? format(new Date(c.last_login_at), "dd MMM yyyy HH:mm") : "Never",
         o?.order_count ?? 0,
         o?.total_spent?.toFixed(0) ?? "0",
         o?.last_order_date ? format(new Date(o.last_order_date), "dd MMM yyyy") : "",

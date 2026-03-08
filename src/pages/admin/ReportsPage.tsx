@@ -159,12 +159,6 @@ const ReportsPage = () => {
     return Array.from({ length: lb.ward_count }, (_, i) => i + 1);
   }, [localBodies, filterLocalBody]);
 
-  // Profile lookup for location filtering
-  const profileMap = useMemo(() => {
-    const m: Record<string, Profile> = {};
-    profiles.forEach(p => { m[p.user_id] = p; });
-    return m;
-  }, [profiles]);
 
   useEffect(() => {
     const load = async () => {

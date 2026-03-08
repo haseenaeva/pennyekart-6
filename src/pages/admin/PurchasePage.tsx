@@ -261,6 +261,7 @@ const PurchasePage = () => {
     setEditPrice(h.purchase_price);
     setEditBatch(h.batch_number ?? "");
     setEditExpiry(h.expiry_date ?? "");
+    setEditNarration(h.narration ?? "");
   };
 
   const handleEditSave = async () => {

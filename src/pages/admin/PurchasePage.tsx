@@ -193,6 +193,7 @@ const PurchasePage = () => {
         batch_number: item.batch_number || null,
         expiry_date: item.expiry_date || null,
         purchase_number: purchaseNumber,
+        narration: narration || null,
       }))
     );
 

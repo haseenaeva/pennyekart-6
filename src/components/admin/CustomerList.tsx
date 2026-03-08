@@ -151,6 +151,12 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
   // Filter and sort
   const filtered = useMemo(() => {
     let result = customers.filter((c) => {
+      // Mobile number search filter
+      if (mobileSearch.trim()) {
+        const normalizedSearch = mobileSearch.replace(/\D/g, "");
+        const normalizedMobile = (c.mobile_number ?? "").replace(/\D/g, "");
+        if (!normalizedMobile.includes(normalizedSearch)) return false;
+      }
       if (filterPanchayath !== "all" && c.local_body_id !== filterPanchayath) return false;
       if (filterWard !== "all" && String(c.ward_number) !== filterWard) return false;
       if (activityFilter !== "all") {

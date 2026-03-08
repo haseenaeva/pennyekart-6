@@ -34,6 +34,7 @@ const Cart = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletId, setWalletId] = useState<string | null>(null);
   const [walletMinUsage, setWalletMinUsage] = useState(0);
+  const [walletMaxRedeem, setWalletMaxRedeem] = useState<number | null>(null);
 
   // Load saved address and wallet
   useEffect(() => {
@@ -61,6 +62,18 @@ const Cart = () => {
             setWalletMinUsage(data.min_usage_amount);
           }
         });
+      // Fetch max redeem rule
+      supabase
+        .from("app_settings")
+        .select("key, value")
+        .in("key", ["wallet_rule_max_redeem_enabled", "wallet_rule_max_redeem_amount"])
+        .then(({ data }) => {
+          const sm = new Map((data ?? []).map((s: any) => [s.key, s.value]));
+          if (sm.get("wallet_rule_max_redeem_enabled") === "true") {
+            const cap = Number(sm.get("wallet_rule_max_redeem_amount") || 0);
+            if (cap > 0) setWalletMaxRedeem(cap);
+          }
+        });
     }
   }, [user]);
 
@@ -70,7 +83,8 @@ const Cart = () => {
   const couponDiscount = appliedCoupon?.discount ?? 0;
   const orderSubtotal = totalPrice + platformFee - couponDiscount;
   const canUseWallet = walletBalance > 0 && orderSubtotal >= walletMinUsage;
-  const walletDeduction = useWallet && canUseWallet ? Math.min(walletBalance, orderSubtotal) : 0;
+  const maxRedeemable = walletMaxRedeem !== null ? Math.min(walletBalance, walletMaxRedeem) : walletBalance;
+  const walletDeduction = useWallet && canUseWallet ? Math.min(maxRedeemable, orderSubtotal) : 0;
   const finalAmount = totalPrice + platformFee - couponDiscount - walletDeduction;
   const hasComingSoonItems = items.some(i => i.coming_soon);
 

@@ -34,6 +34,20 @@ const SearchBar = () => {
   const displayName = profile?.full_name || profile?.email || user?.email;
   const isLoggedIn = !!user;
 
+  // Log search to history
+  const logSearchHistory = async (searchQuery: string, resultCount: number) => {
+    if (!user) return; // Only log for logged-in users
+    try {
+      await supabase.from('customer_search_history').insert({
+        customer_user_id: user.id,
+        search_query: searchQuery,
+        result_count: resultCount,
+      });
+    } catch (e) {
+      // Silent fail - don't interrupt user experience
+    }
+  };
+
   // Search logic
   useEffect(() => {
     if (query.trim().length < 2) {
@@ -65,10 +79,14 @@ const SearchBar = () => {
         ...(productsRes.data || []).map(p => ({ ...p, source: 'product' as const })),
         ...(sellerRes.data || []).map(p => ({ ...p, source: 'seller' as const })),
       ];
-      setResults(items.slice(0, 10));
+      const finalResults = items.slice(0, 10);
+      setResults(finalResults);
       setSearching(false);
+      
+      // Log search to history
+      logSearchHistory(query.trim(), finalResults.length);
     }, 300);
-  }, [query]);
+  }, [query, user]);
 
   // Close search results on outside click
   useEffect(() => {

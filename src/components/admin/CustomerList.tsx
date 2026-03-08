@@ -1,12 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, MapPin, ShoppingCart, Wallet, TrendingUp, CalendarDays, UserCheck, UserX, Activity, Download, Clock, Zap } from "lucide-react";
+import { Users, MapPin, ShoppingCart, Wallet, TrendingUp, CalendarDays, UserCheck, UserX, Activity, Download, Clock, Zap, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, subDays, formatDistanceToNow, differenceInDays, differenceInHours } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
   id: string;
@@ -34,6 +35,13 @@ interface WalletSummary {
   balance: number;
 }
 
+interface SearchHistorySummary {
+  user_id: string;
+  search_count: number;
+  recent_searches: string[];
+  last_search_at: string | null;
+}
+
 interface CustomerListProps {
   customers: Profile[];
   orderSummaries?: Map<string, OrderSummary>;
@@ -49,6 +57,43 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
   const [sortBy, setSortBy] = useState<string>("newest");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
   const [inactivePeriod, setInactivePeriod] = useState<InactivePeriod>("30");
+  const [searchHistories, setSearchHistories] = useState<Map<string, SearchHistorySummary>>(new Map());
+
+  // Fetch search histories for all customers
+  useEffect(() => {
+    const fetchSearchHistories = async () => {
+      const customerIds = customers.map(c => c.user_id);
+      if (customerIds.length === 0) return;
+
+      const { data } = await supabase
+        .from('customer_search_history')
+        .select('customer_user_id, search_query, created_at')
+        .in('customer_user_id', customerIds)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        const map = new Map<string, SearchHistorySummary>();
+        data.forEach((row: any) => {
+          const existing = map.get(row.customer_user_id);
+          if (existing) {
+            existing.search_count++;
+            if (existing.recent_searches.length < 5 && !existing.recent_searches.includes(row.search_query)) {
+              existing.recent_searches.push(row.search_query);
+            }
+          } else {
+            map.set(row.customer_user_id, {
+              user_id: row.customer_user_id,
+              search_count: 1,
+              recent_searches: [row.search_query],
+              last_search_at: row.created_at,
+            });
+          }
+        });
+        setSearchHistories(map);
+      }
+    };
+    fetchSearchHistories();
+  }, [customers]);
 
   // Classify customers by activity
   const classifyCustomer = (c: Profile): "active" | "inactive" | "new" | "never_ordered" => {
@@ -233,10 +278,11 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
   };
 
   const exportCSV = () => {
-    const headers = ["#", "Name", "Mobile", "Status", "Joined", "Last Login", "Orders", "Total Spent", "Last Order", "Wallet", "Panchayath", "Ward"];
+    const headers = ["#", "Name", "Mobile", "Status", "Joined", "Last Login", "Orders", "Total Spent", "Last Order", "Search Count", "Recent Searches", "Wallet", "Panchayath", "Ward"];
     const rows = filtered.map((c, i) => {
       const o = orderSummaries?.get(c.user_id);
       const w = walletSummaries?.get(c.user_id);
+      const sh = searchHistories.get(c.user_id);
       return [
         i + 1,
         c.full_name ?? "",
@@ -247,6 +293,8 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
         o?.order_count ?? 0,
         o?.total_spent?.toFixed(0) ?? "0",
         o?.last_order_date ? format(new Date(o.last_order_date), "dd MMM yyyy") : "",
+        sh?.search_count ?? 0,
+        sh?.recent_searches.slice(0, 5).join("; ") ?? "",
         w?.balance?.toFixed(0) ?? "0",
         c.local_body_name ?? "",
         c.ward_number ?? "",
@@ -506,6 +554,7 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
               <TableHead className="text-center">Orders</TableHead>
               <TableHead className="text-right">Total Spent</TableHead>
               <TableHead>Last Order</TableHead>
+              <TableHead>Search History</TableHead>
               <TableHead className="text-right">Wallet</TableHead>
               <TableHead>Panchayath</TableHead>
               <TableHead>Ward</TableHead>
@@ -515,6 +564,7 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
             {filtered.map((c, i) => {
               const o = orderSummaries?.get(c.user_id);
               const w = walletSummaries?.get(c.user_id);
+              const sh = searchHistories.get(c.user_id);
               return (
                 <TableRow key={c.id}>
                   <TableCell className="text-muted-foreground">{i + 1}</TableCell>
@@ -557,6 +607,30 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
                       </div>
                     ) : "—"}
                   </TableCell>
+                  <TableCell className="text-xs max-w-[180px]">
+                    {sh ? (
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1">
+                          <Search className="h-3 w-3 text-muted-foreground" />
+                          <Badge variant="secondary" className="text-[10px]">{sh.search_count} searches</Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {sh.recent_searches.slice(0, 3).map((s, idx) => (
+                            <Badge key={idx} variant="outline" className="text-[10px] truncate max-w-[60px]" title={s}>
+                              {s}
+                            </Badge>
+                          ))}
+                        </div>
+                        {sh.last_search_at && (
+                          <span className="text-[10px] text-muted-foreground mt-0.5">
+                            Last: {getRelativeTime(sh.last_search_at)}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">No searches</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     {w && w.balance > 0 ? (
                       <Badge variant="outline" className="font-mono">₹{w.balance.toFixed(0)}</Badge>
@@ -575,7 +649,7 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries }: CustomerLi
             })}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={12} className="text-center text-muted-foreground py-8">No customers found</TableCell>
+                <TableCell colSpan={13} className="text-center text-muted-foreground py-8">No customers found</TableCell>
               </TableRow>
             )}
           </TableBody>

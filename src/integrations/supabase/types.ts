@@ -122,6 +122,30 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_search_history: {
+        Row: {
+          created_at: string
+          customer_user_id: string
+          id: string
+          result_count: number | null
+          search_query: string
+        }
+        Insert: {
+          created_at?: string
+          customer_user_id: string
+          id?: string
+          result_count?: number | null
+          search_query: string
+        }
+        Update: {
+          created_at?: string
+          customer_user_id?: string
+          id?: string
+          result_count?: number | null
+          search_query?: string
+        }
+        Relationships: []
+      }
       customer_wallet_transactions: {
         Row: {
           amount: number

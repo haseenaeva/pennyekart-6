@@ -76,6 +76,9 @@ const ReportsPage = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDistrict, setFilterDistrict] = useState<string>("all");
+  const [filterLocalBody, setFilterLocalBody] = useState<string>("all");
+  const [filterWard, setFilterWard] = useState<string>("all");
 
   // Compute available categories
   const categories = useMemo(() => {

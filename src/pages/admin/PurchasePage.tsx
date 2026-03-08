@@ -526,6 +526,7 @@ const PurchasePage = () => {
                           <TableHead>Purchase Price</TableHead>
                           <TableHead>Batch</TableHead>
                           <TableHead>Expiry</TableHead>
+                          <TableHead>Narration</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -539,6 +540,7 @@ const PurchasePage = () => {
                             <TableCell>₹{h.purchase_price}</TableCell>
                             <TableCell className="text-xs">{h.batch_number ?? "—"}</TableCell>
                             <TableCell className="text-xs">{h.expiry_date ?? "—"}</TableCell>
+                            <TableCell className="text-xs max-w-[150px] truncate">{h.narration ?? "—"}</TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1">
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(h)}>

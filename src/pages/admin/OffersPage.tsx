@@ -129,7 +129,7 @@ const OffersPage = () => {
       let productIds: string[] = [];
 
       if (sectionKey === "featured") {
-        // Get highest discount active products as featured
+        // Get highest discount active admin products as featured
         const { data } = await supabase
           .from("products")
           .select("id")
@@ -138,6 +138,16 @@ const OffersPage = () => {
           .order("discount_rate", { ascending: false })
           .limit(AUTO_ASSIGN_LIMIT);
         productIds = (data ?? []).map((p) => p.id);
+
+        // Also count seller products already marked as featured
+        const { data: sellerFeatured } = await supabase
+          .from("seller_products")
+          .select("id")
+          .eq("is_active", true)
+          .eq("is_approved", true)
+          .eq("is_featured", true);
+        const sellerFeaturedCount = (sellerFeatured ?? []).length;
+        totalCount = productIds.length + sellerFeaturedCount;
       } else if (sectionKey === "low_budget") {
         // Get cheapest active products
         const { data } = await supabase

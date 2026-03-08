@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import WalletRewardPopup from "@/components/WalletRewardPopup";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const Cart = () => {
   const [walletId, setWalletId] = useState<string | null>(null);
   const [walletMinUsage, setWalletMinUsage] = useState(0);
   const [walletMaxRedeem, setWalletMaxRedeem] = useState<number | null>(null);
+  const [walletRewardPopup, setWalletRewardPopup] = useState<{ rewards: { amount: number; desc: string }[]; total: number } | null>(null);
 
   // Load saved address and wallet
   useEffect(() => {
@@ -382,6 +384,7 @@ const Cart = () => {
       }
 
       // --- Wallet Reward Rules (first purchase + midnight) ---
+      let hasWalletReward = false;
       if (user && walletId) {
         try {
           const ruleKeys = [
@@ -401,7 +404,7 @@ const Cart = () => {
               const { count } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id);
               if ((count ?? 0) <= ordersToInsert.length) {
                 bonusTotal += fpAmount;
-                bonusItems.push({ amount: fpAmount, desc: `First purchase reward: ₹${fpAmount}` });
+                bonusItems.push({ amount: fpAmount, desc: "First Purchase Reward" });
               }
             }
           }
@@ -412,7 +415,7 @@ const Cart = () => {
             const hour = new Date().getHours();
             if (midAmount > 0 && hour >= 0 && hour < 5) {
               bonusTotal += midAmount;
-              bonusItems.push({ amount: midAmount, desc: `Midnight order bonus: ₹${midAmount}` });
+              bonusItems.push({ amount: midAmount, desc: "Midnight Order Bonus" });
             }
           }
 
@@ -426,6 +429,8 @@ const Cart = () => {
                 description: item.desc, order_id: firstOrderId,
               } as any);
             }
+            hasWalletReward = true;
+            setWalletRewardPopup({ rewards: bonusItems, total: bonusTotal });
           }
         } catch (e) {
           console.error("Wallet bonus error:", e);
@@ -440,7 +445,7 @@ const Cart = () => {
           ? `${orderCount} orders placed successfully! Micro godown items ship directly. Seller items await seller confirmation.`
           : "Order placed successfully!"
       );
-      navigate("/");
+      if (!hasWalletReward) navigate("/");
     } catch (err: any) {
       toast.error(err.message || "Failed to place order");
     } finally {
@@ -773,6 +778,17 @@ const Cart = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Wallet Reward Popup */}
+      <WalletRewardPopup
+        open={!!walletRewardPopup}
+        onClose={() => {
+          setWalletRewardPopup(null);
+          navigate("/");
+        }}
+        rewards={walletRewardPopup?.rewards ?? []}
+        totalAmount={walletRewardPopup?.total ?? 0}
+      />
     </div>
   );
 };

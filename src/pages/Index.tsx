@@ -159,7 +159,7 @@ const Index = () => {
       const rows: React.ReactNode[] = [];
 
       if (selectedItems.length > 0) {
-        rows.push(<ProductRow key={selectedCategory} title={selectedCategory} products={toRowFormat(selectedItems)} />);
+        rows.push(<ProductRow key={selectedCategory} title={selectedCategory} products={toRowFormat(applySorting(selectedItems))} />);
       } else {
         rows.push(
           <div key="empty" className="py-4 text-center text-muted-foreground">

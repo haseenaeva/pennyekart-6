@@ -192,6 +192,7 @@ const Index = () => {
       </header>
 
       <main className="relative z-0 space-y-2">
+        <CartReminderBanner />
         <FlashSaleBanner />
         <CategoryBar onCategoryClick={handleCategoryClick} selectedCategory={selectedCategory} />
         <BannerCarousel />

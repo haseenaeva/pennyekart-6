@@ -307,7 +307,32 @@ const GodownsPage = () => {
     }
   };
 
-  const filteredGodowns = godowns.filter(g => g.godown_type === activeTab);
+  // Get local body IDs for the selected filter district
+  const filterDistrictLocalBodyIds = filterDistrictId
+    ? localBodies.filter(lb => lb.district_id === filterDistrictId).map(lb => lb.id)
+    : [];
+
+  // Local bodies available in the filter district dropdown
+  const filterableLocalBodies = filterDistrictId
+    ? localBodies.filter(lb => lb.district_id === filterDistrictId)
+    : localBodies;
+
+  const filteredGodowns = godowns.filter(g => {
+    if (g.godown_type !== activeTab) return false;
+    // Apply panchayath filter
+    if (filterLocalBodyId) {
+      const hasLB = godownLocalBodies.some(glb => glb.godown_id === g.id && glb.local_body_id === filterLocalBodyId);
+      const hasWard = godownWards.some(gw => gw.godown_id === g.id && gw.local_body_id === filterLocalBodyId);
+      return hasLB || hasWard;
+    }
+    // Apply district filter
+    if (filterDistrictId) {
+      const hasLB = godownLocalBodies.some(glb => glb.godown_id === g.id && filterDistrictLocalBodyIds.includes(glb.local_body_id));
+      const hasWard = godownWards.some(gw => gw.godown_id === g.id && filterDistrictLocalBodyIds.includes(gw.local_body_id));
+      return hasLB || hasWard;
+    }
+    return true;
+  });
 
   const filteredLocalBodies = localBodies.filter(lb =>
     lb.name.toLowerCase().includes(localBodySearch.toLowerCase()) ||

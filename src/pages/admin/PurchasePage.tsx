@@ -337,8 +337,12 @@ const PurchasePage = () => {
                   <div>
                     <Label className="text-xs">Admin</Label>
                     <Input value={profile?.full_name || profile?.email || "—"} disabled className="bg-muted" />
-                  </div>
-                </div>
+                   </div>
+                 </div>
+                 <div className="mt-3">
+                   <Label className="text-xs">Narration</Label>
+                   <Input value={narration} onChange={e => setNarration(e.target.value)} placeholder="Purchase narration / remarks" />
+                 </div>
               </CardContent>
             </Card>
 

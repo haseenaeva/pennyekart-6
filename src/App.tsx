@@ -100,6 +100,7 @@ const AppRoutes = () => {
       } />
 
       {/* Customer */}
+      <Route path="/play" element={<PlayVideos />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/flash-sale/:id" element={<FlashSaleDetail />} />
       <Route path="/cart" element={<Cart />} />

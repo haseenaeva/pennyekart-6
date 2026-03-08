@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import WalletRewardPopup from "@/components/WalletRewardPopup";
 
 const Cart = () => {
   const navigate = useNavigate();

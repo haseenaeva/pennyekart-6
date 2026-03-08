@@ -613,11 +613,29 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries, onRefresh }:
               const w = walletSummaries?.get(c.user_id);
               const sh = searchHistories.get(c.user_id);
               return (
-                <TableRow key={c.id}>
+                <TableRow key={c.id} className={c.is_blocked ? "bg-destructive/5" : undefined}>
                   <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                  <TableCell className="font-medium">{c.full_name ?? "—"}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1.5">
+                      {c.is_blocked && <Ban className="h-3.5 w-3.5 text-destructive" />}
+                      {c.full_name ?? "—"}
+                    </div>
+                  </TableCell>
                   <TableCell>{c.mobile_number ?? "—"}</TableCell>
                   <TableCell>{getStatusBadge(c)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch 
+                        checked={!c.is_blocked}
+                        onCheckedChange={() => toggleBlock(c.user_id, c.is_blocked ?? false)}
+                      />
+                      {c.is_blocked ? (
+                        <Badge variant="destructive" className="text-[10px]">Blocked</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200">Active</Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {c.created_at ? (
                       <span className="flex items-center gap-1">

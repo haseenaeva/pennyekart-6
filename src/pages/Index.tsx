@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import PlatformSelector from "@/components/PlatformSelector";
 import SearchBar from "@/components/SearchBar";
 import CategoryBar from "@/components/CategoryBar";
@@ -10,9 +10,11 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import FlashSaleBanner from "@/components/FlashSaleBanner";
 import Footer from "@/components/Footer";
 import CartReminderBanner from "@/components/CartReminderBanner";
+import WalletRewardPopup from "@/components/WalletRewardPopup";
 import { useAuth } from "@/hooks/useAuth";
 import { useAreaProducts } from "@/hooks/useAreaProducts";
 import { useSectionProducts } from "@/hooks/useSectionProducts";
+import { supabase } from "@/integrations/supabase/client";
 
 const sectionOrder = ["featured", "sponsors", "most_ordered", "new_arrivals", "low_budget"];
 

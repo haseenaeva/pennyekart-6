@@ -476,6 +476,9 @@ const CustomerList = ({ customers, orderSummaries, walletSummaries, onRefresh }:
                 <TabsTrigger value="never_ordered" className="text-xs h-7 px-3">
                   Never Ordered <Badge className="ml-1 text-[10px] px-1.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-0">{activityCounts.never_ordered}</Badge>
                 </TabsTrigger>
+                <TabsTrigger value="blocked" className="text-xs h-7 px-3">
+                  <Ban className="h-3 w-3 mr-1" /> Blocked <Badge className="ml-1 text-[10px] px-1.5 bg-destructive/10 text-destructive border-0">{activityCounts.blocked}</Badge>
+                </TabsTrigger>
               </TabsList>
             </Tabs>
             {(activityFilter === "inactive" || activityFilter === "all") && (

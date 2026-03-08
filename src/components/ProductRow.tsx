@@ -32,6 +32,13 @@ const ProductRow = ({ title, products, linkPrefix = "/product/", sectionKey }: P
   const meta = sectionKey ? sectionMeta[sectionKey] : null;
   const Icon = meta?.icon;
 
+  // Sort: available first, coming_soon last
+  const sortedProducts = [...products].sort((a, b) => {
+    if (a.coming_soon && !b.coming_soon) return 1;
+    if (!a.coming_soon && b.coming_soon) return -1;
+    return 0;
+  });
+
   return (
     <section className={`py-4 ${meta ? `bg-gradient-to-r ${meta.gradient}` : "bg-card"}`}>
       <div className="container">
@@ -44,11 +51,16 @@ const ProductRow = ({ title, products, linkPrefix = "/product/", sectionKey }: P
             )}
             <h2 className="font-heading text-lg font-bold text-foreground md:text-xl">{title}</h2>
           </div>
-          <button className="text-sm font-semibold text-primary hover:underline">View All</button>
+          <button
+            onClick={() => navigate(`/category/${encodeURIComponent(title)}`)}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            View All
+          </button>
         </div>
 
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-          {products.map((p, i) => (
+          {sortedProducts.map((p, i) => (
             <div
               key={p.id || i}
               onClick={() => p.id && !p.coming_soon && navigate(`${linkPrefix}${p.id}`)}

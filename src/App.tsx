@@ -54,6 +54,7 @@ import Cart from "./pages/customer/Cart";
 import CustomerProfile from "./pages/customer/Profile";
 import CustomerWallet from "./pages/customer/Wallet";
 import PlayVideos from "./pages/customer/PlayVideos";
+import CategoryProducts from "./pages/customer/CategoryProducts";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,7 @@ const AppRoutes = () => {
       {/* Customer */}
       <Route path="/play" element={<PlayVideos />} />
       <Route path="/product/:id" element={<ProductDetail />} />
+      <Route path="/category/:name" element={<CategoryProducts />} />
       <Route path="/flash-sale/:id" element={<FlashSaleDetail />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/customer/signup" element={<CustomerSignup />} />

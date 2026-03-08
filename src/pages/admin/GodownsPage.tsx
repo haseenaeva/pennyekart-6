@@ -190,6 +190,7 @@ const GodownsPage = () => {
 
   useEffect(() => {
     fetchGodowns();
+    fetchDistricts();
     fetchLocalBodies();
     fetchGodownLocalBodies();
     fetchGodownWards();

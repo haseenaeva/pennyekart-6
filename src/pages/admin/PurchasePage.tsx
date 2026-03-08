@@ -596,6 +596,10 @@ const PurchasePage = () => {
                   <Input type="date" value={editExpiry} onChange={e => setEditExpiry(e.target.value)} />
                 </div>
               </div>
+              <div>
+                <Label className="text-xs">Narration</Label>
+                <Input value={editNarration} onChange={e => setEditNarration(e.target.value)} placeholder="Remarks" />
+              </div>
             </div>
           )}
           <DialogFooter>

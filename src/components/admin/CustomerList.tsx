@@ -25,6 +25,8 @@ interface Profile {
   created_at?: string;
   last_login_at?: string | null;
   is_blocked?: boolean;
+  referred_by?: string | null;
+  referrer_name?: string | null;
 }
 
 interface OrderSummary {

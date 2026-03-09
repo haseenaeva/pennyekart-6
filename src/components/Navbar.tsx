@@ -40,14 +40,18 @@ const Navbar = () => {
   }, []);
 
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
 
   const menuItems = [
     { icon: User, label: "My Profile", action: () => navigate("/customer/profile") },
     { icon: Package, label: "Orders", action: () => navigate("/customer/profile") },
+    { icon: Wallet, label: "Wallet", action: () => navigate("/customer/wallet") },
+    { icon: Crown, label: "Penny Prime", action: () => navigate("/penny-prime") },
     { icon: MapPin, label: "Saved Addresses", action: () => navigate("/customer/profile") },
     { icon: Heart, label: "Wishlist", action: () => navigate("/customer/profile") },
     { icon: Bell, label: "Notifications", action: () => navigate("/customer/profile") },
     { icon: UserPlus, label: "Invite a Friend", action: () => setInviteOpen(true) },
+    { icon: Download, label: "Download App", action: () => setDownloadOpen(true) },
   ];
 
   return (

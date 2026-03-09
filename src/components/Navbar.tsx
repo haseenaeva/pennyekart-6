@@ -158,6 +158,7 @@ const Navbar = () => {
           </ul>
         </div>
       )}
+      <InviteFriendDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </nav>
   );
 };

@@ -98,6 +98,17 @@ const CustomerSignup = () => {
     setLoading(true);
 
     try {
+      // Resolve referral code to profile id
+      let referredByProfileId: string | null = null;
+      if (referralCode) {
+        const { data: referrerProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("referral_code", referralCode)
+          .maybeSingle();
+        if (referrerProfile) referredByProfileId = referrerProfile.id;
+      }
+
       const email = `${mobile}@pennyekart.in`;
       const { error } = await supabase.auth.signUp({
         email,
@@ -109,6 +120,7 @@ const CustomerSignup = () => {
             user_type: "customer",
             local_body_id: localBodyId,
             ward_number: parseInt(wardNumber),
+            referred_by: referredByProfileId,
           },
         },
       });

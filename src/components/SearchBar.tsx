@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import DownloadAppDialog from "@/components/DownloadAppDialog";
+import InviteFriendDialog from "@/components/InviteFriendDialog";
 
 interface SearchResult {
   id: string;

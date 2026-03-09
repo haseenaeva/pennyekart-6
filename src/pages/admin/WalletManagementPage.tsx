@@ -96,6 +96,14 @@ const RULE_DEFINITIONS = [
     enabledKey: "wallet_rule_max_redeem_enabled",
     amountKey: "wallet_rule_max_redeem_amount",
   },
+  {
+    key: "referral_bonus",
+    label: "Invite Friend Referral Bonus",
+    description: "Reward customers with wallet points when someone signs up using their referral link.",
+    icon: <UserPlus className="h-5 w-5 text-pink-600" />,
+    enabledKey: "wallet_rule_referral_enabled",
+    amountKey: "wallet_rule_referral_amount",
+  },
 ];
 
 const WalletManagementPage = () => {

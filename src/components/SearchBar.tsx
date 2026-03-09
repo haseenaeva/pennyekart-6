@@ -301,6 +301,7 @@ const SearchBar = () => {
       {/* Portal-rendered dropdown */}
       {dropdownPortal}
       <DownloadAppDialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen} />
+      <InviteFriendDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   );
 };

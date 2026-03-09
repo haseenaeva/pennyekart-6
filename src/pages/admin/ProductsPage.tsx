@@ -583,33 +583,26 @@ const ProductsPage = () => {
               </select>
             </div>
 
-            {/* Platform Margin Override */}
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-              <Label className="flex items-center gap-2 text-primary text-sm">
+            {/* Platform Margin (Read-only — managed from Platform Margin page) */}
+            <div className="rounded-lg border border-muted bg-muted/30 p-3">
+              <Label className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Percent className="h-4 w-4" />
                 Platform Margin (%)
               </Label>
               <p className="text-xs text-muted-foreground mb-2">
-                Override category margin ({getCategoryMargin(sellerForm.category)}%) for this product
+                Margin is managed by admin via Platform Margin page. Sellers cannot override this.
               </p>
-              <Input 
-                type="number" 
-                min="0"
-                max="100"
-                step="0.1"
-                value={sellerForm.margin_percentage ?? ""} 
-                onChange={(e) => {
-                  const val = e.target.value === "" ? null : +e.target.value;
-                  if (val !== null) {
-                    handleMarginChange(val, sellerForm as any, setSellerForm as any);
-                  } else {
-                    const catMargin = getCategoryMargin(sellerForm.category);
-                    const newPrice = calculateSellingPrice(sellerForm.purchase_rate, catMargin);
-                    setSellerForm({ ...sellerForm, margin_percentage: null, price: newPrice, discount_rate: calculateDiscount(sellerForm.mrp, newPrice) });
-                  }
-                }}
-                placeholder={`Category default: ${getCategoryMargin(sellerForm.category)}%`}
-              />
+              <div className="flex items-center gap-2">
+                <Input 
+                  type="number" 
+                  value={sellerForm.margin_percentage ?? getCategoryMargin(sellerForm.category)} 
+                  disabled
+                  className="w-32 bg-muted"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {sellerForm.margin_percentage != null ? "(Product override)" : "(Category default)"}
+                </span>
+              </div>
             </div>
 
             {/* Pricing with Auto-Calculation */}

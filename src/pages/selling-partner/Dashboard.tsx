@@ -488,13 +488,21 @@ const SellingPartnerDashboard = () => {
                     <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
                     <div className="grid grid-cols-3 gap-3">
                       <div><Label>Purchase Rate</Label><Input type="number" min="0" step="0.01" value={form.purchase_rate} onChange={e => setForm({ ...form, purchase_rate: e.target.value })} /></div>
-                      <div><Label>MRP</Label><Input type="number" min="0" step="0.01" value={form.mrp} onChange={e => { const m = e.target.value; const dr = parseFloat(form.discount_rate) || 0; setForm({ ...form, mrp: m, price: String((parseFloat(m) || 0) - dr) }); }} required /></div>
-                      <div><Label>Discount Rate</Label><Input type="number" min="0" step="0.01" value={form.discount_rate} onChange={e => { const dr = e.target.value; const m = parseFloat(form.mrp) || 0; setForm({ ...form, discount_rate: dr, price: String(m - (parseFloat(dr) || 0)) }); }} /></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><Label>Selling Price</Label><Input type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} /></div>
+                      <div><Label>MRP</Label><Input type="number" min="0" step="0.01" value={form.mrp} onChange={e => setForm({ ...form, mrp: e.target.value })} required /></div>
                       <div><Label>Stock</Label><Input type="number" min="0" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} required /></div>
                     </div>
+                    {(() => {
+                      const pr = parseFloat(form.purchase_rate) || 0;
+                      const m = parseFloat(form.mrp) || 0;
+                      const margin = getCategoryMargin(form.category);
+                      const { price, discount } = calcPriceFromMargin(pr, m, form.category);
+                      return (
+                        <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
+                          <p>Category Margin: <span className="font-semibold text-primary">{margin}%</span></p>
+                          <p>Auto Price: <span className="font-semibold">₹{price.toFixed(2)}</span> | Discount: <span className="font-semibold">₹{discount.toFixed(2)}</span></p>
+                        </div>
+                      );
+                    })()}
                     <div>
                       <Label>Category</Label>
                       <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>

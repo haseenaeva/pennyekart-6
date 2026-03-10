@@ -371,6 +371,8 @@ const SellingPartnerDashboard = () => {
       discount_rate: String(p.discount_rate), is_featured: p.is_featured,
       video_url: (p as any).video_url ?? "",
       wallet_points: String((p as any).wallet_points ?? 0),
+      featured_discount_type: (p as any).featured_discount_type ?? "amount",
+      featured_discount_value: String((p as any).featured_discount_value ?? 0),
     });
     setEditDialogOpen(true);
   };
